@@ -181,13 +181,13 @@ function CheckoutPhoneInput({
     <div
       ref={wrapRef}
       className={[
-        'relative flex items-stretch rounded-2xl border bg-white transition-colors',
+        'relative flex w-full min-w-0 items-stretch rounded-2xl border bg-white transition-colors',
         hasError ? 'border-red-400 ring-2 ring-red-100' : 'border-line focus-within:border-brand focus-within:ring-2 focus-within:ring-brand-ring',
       ].join(' ')}
     >
       <button
         type="button"
-        className="flex items-center gap-2 rounded-l-2xl border-r border-line px-3.5 py-3 text-sm font-medium text-ink hover:bg-brand-soft/40"
+        className="flex shrink-0 items-center gap-2 rounded-l-2xl border-r border-line px-3.5 py-3 text-sm font-medium text-ink hover:bg-brand-soft/40"
         onClick={() => setOpen(o => !o)}
         aria-label="Select country code"
         aria-expanded={open}
@@ -200,7 +200,8 @@ function CheckoutPhoneInput({
       <input
         ref={inputRef}
         type="tel"
-        className="flex-1 rounded-r-2xl bg-transparent px-3.5 py-3 text-base text-ink placeholder:text-ink-muted/70 focus:outline-none"
+        size={1}
+        className="w-full min-w-0 flex-1 rounded-r-2xl bg-transparent px-3.5 py-3 text-base text-ink placeholder:text-ink-muted/70 focus:outline-none"
         placeholder={countryCode === 'IN' ? '9876543210' : 'Phone number'}
         value={value}
         onChange={e => onValueChange(e.target.value.replace(/\D/g, ''))}
@@ -215,12 +216,13 @@ function CheckoutPhoneInput({
           <div className="border-b border-line p-2.5">
             <input
               type="text"
+              size={1}
               placeholder="Search country..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               autoFocus
               aria-label="Search country"
-              className="w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-brand focus:outline-none"
+              className="w-full min-w-0 rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-brand focus:outline-none"
             />
           </div>
           <div className="max-h-[240px] overflow-y-auto" role="listbox">
@@ -279,7 +281,7 @@ function Field({
   const hasError = touched && !!error;
   const isValid = touched && !error && value.trim().length > 0;
   return (
-    <div id={`field-${id}`} className="flex flex-col">
+    <div id={`field-${id}`} className="flex min-w-0 flex-col">
       <label htmlFor={id} className="mb-1.5 text-sm font-semibold text-ink">
         {label} <span className="text-brand">*</span>
       </label>
@@ -287,6 +289,7 @@ function Field({
         id={id}
         name={id}
         type={type}
+        size={1}
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -296,7 +299,7 @@ function Field({
         aria-describedby={hasError ? `err-${id}` : undefined}
         aria-invalid={hasError}
         className={[
-          'w-full rounded-2xl border bg-white px-4 py-3 text-base text-ink placeholder:text-ink-muted/70 transition-colors focus:outline-none',
+          'w-full min-w-0 rounded-2xl border bg-white px-4 py-3 text-base text-ink placeholder:text-ink-muted/70 transition-colors focus:outline-none',
           hasError
             ? 'border-red-400 ring-2 ring-red-100'
             : isValid
@@ -565,7 +568,14 @@ export default function CheckoutForm() {
 
     if (Object.keys(allErrors).length > 0) {
       const firstErrorKey = Object.keys(allErrors)[0] as keyof FormFields;
-      document.getElementById(`field-${firstErrorKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // inline: 'nearest' prevents the browser from scrolling horizontally to
+      // center the field. Without it, a wide input being centered drags the
+      // whole page rightward on mobile.
+      document.getElementById(`field-${firstErrorKey}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
       return;
     }
 
@@ -779,9 +789,9 @@ export default function CheckoutForm() {
             One step away from the 3-Day Prenatal Challenge.
           </p>
 
-          <form onSubmit={handleSubmit} noValidate className="mt-6">
-            <div className="grid gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+          <form onSubmit={handleSubmit} noValidate className="mt-6 w-full min-w-0">
+            <div className="grid min-w-0 gap-4">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                 <Field
                   id="firstName"
                   label="First Name"
@@ -832,7 +842,7 @@ export default function CheckoutForm() {
                 autoComplete="address-level2"
               />
 
-              <div id="field-phone" className="flex flex-col">
+              <div id="field-phone" className="flex min-w-0 flex-col">
                 <label htmlFor="phone" className="mb-1.5 text-sm font-semibold text-ink">
                   Phone Number <span className="text-brand">*</span>
                 </label>
@@ -877,10 +887,11 @@ export default function CheckoutForm() {
                       <label htmlFor="coupon" className="mb-1.5 block text-sm font-semibold text-ink">
                         Coupon code
                       </label>
-                      <div className="flex gap-2">
+                      <div className="flex min-w-0 gap-2">
                         <input
                           id="coupon"
                           type="text"
+                          size={1}
                           value={couponInput}
                           onChange={e => {
                             setCouponInput(e.target.value);
@@ -895,7 +906,7 @@ export default function CheckoutForm() {
                           placeholder="Enter code"
                           aria-invalid={!!couponError}
                           className={[
-                            'flex-1 rounded-2xl border bg-white px-4 py-3 text-base uppercase tracking-wider text-ink placeholder:text-ink-muted/60 placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-brand-ring',
+                            'w-full min-w-0 flex-1 rounded-2xl border bg-white px-4 py-3 text-base uppercase tracking-wider text-ink placeholder:text-ink-muted/60 placeholder:normal-case focus:outline-none focus:ring-2 focus:ring-brand-ring',
                             couponError ? 'border-red-400' : 'border-line focus:border-brand',
                           ].join(' ')}
                         />
@@ -903,7 +914,7 @@ export default function CheckoutForm() {
                           type="button"
                           onClick={handleApplyCoupon}
                           disabled={couponLoading || !couponInput.trim()}
-                          className="rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
+                          className="shrink-0 rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {couponLoading ? 'Checking…' : 'Apply'}
                         </button>

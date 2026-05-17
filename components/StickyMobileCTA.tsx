@@ -17,7 +17,10 @@ export default function StickyMobileCTA() {
   const [finalCtaInView, setFinalCtaInView] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolledPastHero(window.scrollY > 480);
+    // Show the sticky bar after the user's first scroll (~one short swipe).
+    // Lower threshold = bar appears sooner. 200px lands the user roughly at the
+    // Dr. Ankita credential strip in the hero on most mobile viewports.
+    const onScroll = () => setScrolledPastHero(window.scrollY > 200);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
