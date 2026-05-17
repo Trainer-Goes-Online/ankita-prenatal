@@ -1,9 +1,9 @@
 /* ──────────────────────────────────────────────────────────────────────
- *  <Icon3D> — site-wide 3D icon component.
- *  Loads Microsoft Fluent 3D Emoji from the Iconify CDN — high-quality
+ *  <Icon3D> - site-wide 3D icon component.
+ *  Loads Microsoft Fluent 3D Emoji from the Iconify CDN - high-quality
  *  3D-rendered icons, zero local assets, zero downloads.
  *
- *  Pass a semantic short name (e.g. "heart", "laptop") — the ICON_MAP
+ *  Pass a semantic short name (e.g. "heart", "laptop") - the ICON_MAP
  *  resolves it to the actual Fluent Emoji slug. Unmapped names fall
  *  through directly to the CDN so you can use any Fluent Emoji name
  *  without touching this file.
@@ -23,21 +23,21 @@ const ICON_MAP: Record<string, string> = {
   yoga: 'person-in-lotus-position',
   refund: 'money-with-wings',
 
-  // DoesThisSoundLikeYou — pain qualification states (object icons, not faces)
+  // DoesThisSoundLikeYou - pain qualification states (object icons, not faces)
   'back-pain': 'warning',
   scared: 'no-entry',
   worry: 'thought-balloon',
   tired: 'alarm-clock',
   confused: 'puzzle-piece',
 
-  // BodyWorxMethod — 5 method pillars
+  // BodyWorxMethod - 5 method pillars
   breathing: 'leaf-fluttering-in-wind',
   'pelvic-core': 'flexed-biceps',
   mobility: 'person-walking',
   nutrition: 'green-apple',
   'labor-prep': 'baby',
 
-  // /new-page — trust strip + hero chips
+  // /new-page - trust strip + hero chips
   shield: 'shield',
   locked: 'locked',
   calendar: 'spiral-calendar',

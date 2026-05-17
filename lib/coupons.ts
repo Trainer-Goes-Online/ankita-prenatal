@@ -1,5 +1,5 @@
 /**
- * Coupon validation — server-authoritative.
+ * Coupon validation - server-authoritative.
  * The client may attach a couponCode to /api/razorpay/create-order, but the
  * server is the ONLY component that determines the final amount. Never trust
  * the client to compute the discount.
@@ -11,9 +11,9 @@ export type CouponSuccess = {
   code: string;
   /** Final paise amount that will be charged via Razorpay. */
   finalAmountPaise: number;
-  /** Final amount expressed in rupees as a string — for display & Pabbly. */
+  /** Final amount expressed in rupees as a string - for display & Pabbly. */
   finalAmountRupeesString: string;
-  /** Final amount expressed in rupees as a number — for CAPI. */
+  /** Final amount expressed in rupees as a number - for CAPI. */
   finalAmountRupeesNumeric: number;
   /** Original list price (rupees) so the UI can render the strike-through. */
   originalAmountRupeesNumeric: number;
@@ -35,7 +35,7 @@ export function validateCoupon(rawCode: string): CouponResult {
 
   switch (code) {
     case 'tgotest2025':
-      // Agency QA coupon — 100% off. Skips Razorpay entirely (no card needed),
+      // Agency QA coupon - 100% off. Skips Razorpay entirely (no card needed),
       // so it works even when international payments are disabled on the
       // Razorpay account. The free-order flow is HMAC-signed server-side
       // (see app/api/razorpay/create-order/route.ts) so the client can't fake

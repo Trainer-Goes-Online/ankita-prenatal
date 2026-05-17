@@ -76,7 +76,7 @@ export function readUtmCookie(): UtmData {
 
 /**
  * Append stored UTMs (from cookie) onto a URL. Existing utm_* params on the
- * URL win over the cookie values — so if a fresh utm_source arrives in the
+ * URL win over the cookie values - so if a fresh utm_source arrives in the
  * URL it overrides what was cached.
  */
 export function withUtm(path: string): string {
@@ -117,13 +117,13 @@ export function syncUtmWithUrl(): void {
 
   const urlUtm = readUtmFromUrl(window.location.search);
 
-  // Case 1: URL carries UTMs — cache them, leave URL alone.
+  // Case 1: URL carries UTMs - cache them, leave URL alone.
   if (hasAnyUtm(urlUtm)) {
     writeUtmCookie(urlUtm);
     return;
   }
 
-  // Case 2: URL has none — restore from cookie if present, rewrite URL.
+  // Case 2: URL has none - restore from cookie if present, rewrite URL.
   const cookieUtm = readUtmCookie();
   if (!hasAnyUtm(cookieUtm)) return;
 

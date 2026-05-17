@@ -6,10 +6,10 @@ import { ShieldCheck } from '@phosphor-icons/react/dist/ssr';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 
 /**
- * Sticky footer CTA — visible on mobile, tablet, and desktop.
+ * Sticky footer CTA - visible on mobile, tablet, and desktop.
  * - Hidden until the user has scrolled past the hero (~480px).
  * - Hidden again once the FinalCTA section enters view (since it already
- *   shows a giant CTA — sticky overlay would be redundant + visually noisy).
+ *   shows a giant CTA - sticky overlay would be redundant + visually noisy).
  * - Hidden on /checkout and /thank-you so it doesn't compete with the form.
  */
 export default function StickyMobileCTA() {
@@ -24,7 +24,7 @@ export default function StickyMobileCTA() {
   }, []);
 
   useEffect(() => {
-    // Look for the FinalCTA — it lives at the bottom of the page. When it
+    // Look for the FinalCTA - it lives at the bottom of the page. When it
     // enters the viewport, hide the sticky bar.
     const target = document.querySelector('[data-final-cta]');
     if (!target) return;
@@ -57,7 +57,7 @@ export default function StickyMobileCTA() {
           <Link
             href="/checkout"
             className="bw-cta min-h-[52px] w-full text-[15px] md:w-auto md:min-w-[320px] md:text-[15.5px]"
-            aria-label="Start your 3-day prenatal challenge — opens checkout"
+            aria-label="Start your 3-day prenatal challenge - opens checkout"
           >
             Get Instant Access · ₹{CHECKOUT_CONFIG.amountRupeesNumeric}
             <ArrowRight />

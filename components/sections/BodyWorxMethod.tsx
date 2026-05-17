@@ -72,7 +72,7 @@ export default function BodyWorxMethod() {
           <div className="mx-auto mt-5 max-w-3xl space-y-3 text-[15px] text-ink-soft sm:mt-6 sm:text-[16px]">
             <p>
               Most pregnant women are told to either{' '}
-              <strong className="text-ink">&ldquo;just rest&rdquo;</strong> — or to
+              <strong className="text-ink">&ldquo;just rest&rdquo;</strong> - or to
               follow random pregnancy workouts from the internet. That&apos;s why so
               many still struggle with pain, stiffness, weakness, fear of labor, and
               poor recovery afterwards.
@@ -82,12 +82,12 @@ export default function BodyWorxMethod() {
               <strong className="text-ink">
                 actually support your body during pregnancy, labor &amp; recovery
               </strong>{' '}
-              — in the right order, before pushing intense exercise.
+              - in the right order, before pushing intense exercise.
             </p>
           </div>
         </div>
 
-        {/* Pillars — 5 cards. On lg+, lay out as a 6-col grid with each
+        {/* Pillars - 5 cards. On lg+, lay out as a 6-col grid with each
             card spanning 2 cols. Cards 4 & 5 get explicit col-starts so
             the bottom row centers (cols 2-3 and 4-5). */}
         <ol className="mt-10 grid gap-4 sm:mt-12 sm:gap-5 md:grid-cols-2 lg:mt-14 lg:grid-cols-6">

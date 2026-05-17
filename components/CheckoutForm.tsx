@@ -9,6 +9,7 @@ import {
   Tag,
   ShieldCheck,
   X,
+  CaretDown,
 } from '@phosphor-icons/react/dist/ssr';
 import PaymentLogos from '@/components/PaymentLogos';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
@@ -65,7 +66,7 @@ interface RazorpayResponse {
   razorpay_signature: string;
 }
 
-// ── Country data (fixed infrastructure — do not modify) ──────────────────────
+// ── Country data (fixed infrastructure - do not modify) ──────────────────────
 
 const COUNTRIES: Country[] = [
   { code: 'IN', name: 'India',          dial: '+91',  flag: '🇮🇳' },
@@ -95,7 +96,7 @@ const COUNTRIES: Country[] = [
   { code: 'NP', name: 'Nepal',          dial: '+977', flag: '🇳🇵' },
 ];
 
-// ── Validation (fixed — do not modify) ───────────────────────────────────────
+// ── Validation (fixed - do not modify) ───────────────────────────────────────
 
 const NAME_RE = /^[a-zA-Z\s\-'.]{2,}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -324,90 +325,122 @@ interface OrderSummaryProps {
 const VALUE_BULLETS = [
   `${CHECKOUT_CONFIG.challenge.days} days of live physio-led prenatal sessions on Zoom`,
   'Labor breathing + pelvic floor + posture corrections',
-  `${CHECKOUT_CONFIG.challenge.timeSlotList.length} daily slots — ${CHECKOUT_CONFIG.challenge.timeSlots}`,
+  `${CHECKOUT_CONFIG.challenge.timeSlotList.length} daily slots - ${CHECKOUT_CONFIG.challenge.timeSlots}`,
 ];
 
 function OrderSummary({ finalRupees, appliedCoupon }: OrderSummaryProps) {
   const original = CHECKOUT_CONFIG.amountRupeesNumeric;
   const discountAmount = original - finalRupees;
+  // Collapsed by default on mobile. Header click toggles; on lg+ the body is
+  // force-shown via `lg:!block` so the state only governs mobile.
+  const [expanded, setExpanded] = useState(false);
   return (
     <aside
       aria-label="Order summary"
-      className="order-1 rounded-3xl bg-white p-5 shadow-card ring-1 ring-line sm:p-6 md:p-7 lg:order-2 lg:sticky lg:top-24"
+      className="order-1 min-w-0 overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-line lg:order-2 lg:sticky lg:top-24"
     >
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-deep">
-        Order Summary
-      </p>
-      <h2 className="mt-2 font-heading text-xl font-bold leading-snug text-ink sm:text-2xl">
-        {CHECKOUT_CONFIG.challenge.brandName}
-      </h2>
-      <div className="mt-3 inline-flex items-center gap-2 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand-deep">
-        <Clock weight="fill" size={12} aria-hidden="true" className="text-brand-deep" />
-        Live · Starts {CHECKOUT_CONFIG.challenge.startDate} · {CHECKOUT_CONFIG.challenge.timeSlots}
-      </div>
+      {/* Header - always visible. On mobile, click to toggle body. On lg, header
+          is non-interactive and body is always open. */}
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        aria-expanded={expanded}
+        aria-controls="order-summary-body"
+        className="flex w-full items-start justify-between gap-3 p-5 text-left sm:p-6 md:p-7 lg:cursor-default"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-deep">
+            Order Summary
+          </p>
+          <h2 className="mt-2 font-heading text-base font-bold leading-snug text-ink sm:text-lg lg:text-2xl">
+            {CHECKOUT_CONFIG.challenge.brandName}
+          </h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+          <span className="font-heading text-xl font-extrabold text-ink">
+            {finalRupees === 0 ? 'FREE' : `₹${finalRupees}`}
+          </span>
+          <CaretDown
+            weight="bold"
+            size={18}
+            aria-hidden="true"
+            className={`text-ink-soft transition-transform ${expanded ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </button>
 
-      <div className="my-5 h-px bg-line" />
+      <div
+        id="order-summary-body"
+        className={`px-5 pb-5 sm:px-6 sm:pb-6 md:px-7 md:pb-7 lg:!block ${expanded ? 'block' : 'hidden'}`}
+      >
+        <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand-deep">
+          <Clock weight="fill" size={12} aria-hidden="true" className="text-brand-deep" />
+          Live · Starts {CHECKOUT_CONFIG.challenge.startDate} · {CHECKOUT_CONFIG.challenge.timeSlots}
+        </div>
 
-      <ul className="space-y-3">
-        {VALUE_BULLETS.map(b => (
-          <li key={b} className="flex items-start gap-2.5 text-[15px] text-ink-soft">
-            <span
-              aria-hidden="true"
-              className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep"
-            >
+        <div className="my-5 h-px bg-line" />
+
+        <ul className="space-y-3">
+          {VALUE_BULLETS.map(b => (
+            <li key={b} className="flex items-start gap-2.5 text-[15px] text-ink-soft">
+              <span
+                aria-hidden="true"
+                className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-deep"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </span>
+              {b}
+            </li>
+          ))}
+        </ul>
+
+        <div className="my-5 h-px bg-line" />
+
+        {appliedCoupon && (
+          <div className="mb-4 flex items-start gap-2 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm">
+            <span aria-hidden="true" className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-green-600 text-white">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </span>
-            {b}
-          </li>
-        ))}
-      </ul>
-
-      <div className="my-5 h-px bg-line" />
-
-      {appliedCoupon && (
-        <div className="mb-4 flex items-start gap-2 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm">
-          <span aria-hidden="true" className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-green-600 text-white">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          </span>
-          <div>
-            <p className="font-semibold text-green-800">
-              Coupon <span className="font-mono uppercase">{appliedCoupon.code}</span> applied
-            </p>
-            <p className="text-xs text-green-700">
-              {appliedCoupon.discountReason} · You save ₹{discountAmount}
-            </p>
+            <div>
+              <p className="font-semibold text-green-800">
+                Coupon <span className="font-mono uppercase">{appliedCoupon.code}</span> applied
+              </p>
+              <p className="text-xs text-green-700">
+                {appliedCoupon.discountReason} · You save ₹{discountAmount}
+              </p>
+            </div>
           </div>
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-baseline gap-3">
-        <span className="font-heading text-4xl font-extrabold text-ink">
-          {finalRupees === 0 ? 'FREE' : `₹${finalRupees}`}
-        </span>
-        {finalRupees < original && (
-          <s className="text-lg text-ink-muted">₹{original}</s>
         )}
-        <span className="ml-auto inline-flex items-center gap-1 rounded-pill bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-deep">
-          {finalRupees === 0 ? '100% OFF' : finalRupees < original ? `Save ₹${discountAmount}` : 'Best price'}
-        </span>
-      </div>
-      <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-ink-soft">
-        <ShieldCheck weight="fill" size={14} aria-hidden="true" className="text-brand-deep" />
-        100% Money-Back Guarantee — refunded instantly if you don&apos;t love it.
-      </p>
 
-      <div className="mt-5 flex items-center gap-3 rounded-2xl bg-cream-fade p-3 ring-1 ring-line">
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-gradient font-heading text-sm font-extrabold text-white">
-          A
+        <div className="flex flex-wrap items-baseline gap-3">
+          <span className="font-heading text-4xl font-extrabold text-ink">
+            {finalRupees === 0 ? 'FREE' : `₹${finalRupees}`}
+          </span>
+          {finalRupees < original && (
+            <s className="text-lg text-ink-muted">₹{original}</s>
+          )}
+          <span className="ml-auto inline-flex items-center gap-1 rounded-pill bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-deep">
+            {finalRupees === 0 ? '100% OFF' : finalRupees < original ? `Save ₹${discountAmount}` : 'Best price'}
+          </span>
         </div>
-        <p className="text-[13px] leading-tight text-ink-soft">
-          <strong className="block font-heading text-sm font-bold text-ink">Dr. Ankita</strong>
-          Women&apos;s Health Physio · Your coach for this challenge
+        <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-ink-soft">
+          <ShieldCheck weight="fill" size={14} aria-hidden="true" className="text-brand-deep" />
+          100% Money-Back Guarantee - refunded instantly if you don&apos;t love it.
         </p>
+
+        <div className="mt-5 flex items-center gap-3 rounded-2xl bg-cream-fade p-3 ring-1 ring-line">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-gradient font-heading text-sm font-extrabold text-white">
+            A
+          </div>
+          <p className="text-[13px] leading-tight text-ink-soft">
+            <strong className="block font-heading text-sm font-bold text-ink">Dr. Ankita</strong>
+            Women&apos;s Health Physio · Your coach for this challenge
+          </p>
+        </div>
       </div>
     </aside>
   );
@@ -483,7 +516,7 @@ export default function CheckoutForm() {
   // ── Coupon apply: validates server-side via create-order's coupon branch ──
   // The server is the source of truth. We do a "dry" call here so the user sees
   // the discount in the summary before submitting. The real order is created
-  // on submit. NOTE: this means create-order is hit twice for coupon flows —
+  // on submit. NOTE: this means create-order is hit twice for coupon flows -
   // acceptable trade-off for clear UX.
   async function handleApplyCoupon() {
     const code = couponInput.trim();
@@ -569,7 +602,7 @@ export default function CheckoutForm() {
 
       const selectedCountry = COUNTRIES.find(c => c.code === countryCode) ?? COUNTRIES[0];
 
-      // ── Free-order branch — skip Razorpay modal entirely ─────────────────
+      // ── Free-order branch - skip Razorpay modal entirely ─────────────────
       if (freeOrder && freeOrderToken && coupon?.ok) {
         await handleFreeOrderSuccess({
           orderId,
@@ -732,9 +765,9 @@ export default function CheckoutForm() {
         </div>
       )}
 
-      <div className="grid gap-6 sm:gap-8 lg:grid-cols-[1.4fr_1fr] lg:gap-10">
+      <div className="grid w-full min-w-0 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-10">
         {/* ── Left on desktop / Form (rendered AFTER summary on mobile via order) ── */}
-        <div className="order-2 rounded-3xl bg-white p-5 shadow-card ring-1 ring-line sm:p-6 md:p-8 lg:order-1">
+        <div className="order-2 min-w-0 rounded-3xl bg-white p-5 shadow-card ring-1 ring-line sm:p-6 md:p-8 lg:order-1">
           <div className="bw-chip mb-3">
             <Lock weight="fill" size={14} aria-hidden="true" className="text-brand-deep" />
             Secure Registration

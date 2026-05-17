@@ -50,7 +50,7 @@ export default function DoesThisSoundLikeYou() {
             Does this sound like <span className="bw-gradient-text">you?</span>
           </h2>
           <p className="mt-4 text-[15px] text-ink-soft sm:mt-5 sm:text-[16px]">
-            Your body is preparing for birth — but is anyone preparing{' '}
+            Your body is preparing for birth - but is anyone preparing{' '}
             <strong className="text-ink">you</strong>? If any of these feel familiar,
             this challenge was built for moms exactly like you.
           </p>

@@ -20,7 +20,7 @@ const body = Poppins({
   display: 'swap',
 });
 
-// Editorial serif — used for high-impact display headlines (Hero, FinalCTA).
+// Editorial serif - used for high-impact display headlines (Hero, FinalCTA).
 // Loaded once at the root so all sections can opt in via `font-editorial`.
 const editorial = Fraunces({
   subsets: ['latin'],
@@ -46,11 +46,11 @@ const METADATA_TITLE = `${CHECKOUT_CONFIG.challenge.brandName} | BodyWorx`;
 export const metadata: Metadata = {
   metadataBase: new URL('https://prenatal.bodyworx.in'),
   title: METADATA_TITLE,
-  description: `A physiotherapist-led prenatal challenge — reduce pregnancy pain, move safely, prepare your body for labor, and feel stronger in just ${DAYS} days for ₹${PRICE}. 100% money-back guarantee.`,
+  description: `A physiotherapist-led prenatal challenge - reduce pregnancy pain, move safely, prepare your body for labor, and feel stronger in just ${DAYS} days for ₹${PRICE}. 100% money-back guarantee.`,
   openGraph: {
     type: 'website',
     title: METADATA_TITLE,
-    description: `Physiotherapist-led prenatal challenge. Reduce pain, prepare for labor, feel stronger in ${DAYS} days — for ₹${PRICE}.`,
+    description: `Physiotherapist-led prenatal challenge. Reduce pain, prepare for labor, feel stronger in ${DAYS} days - for ₹${PRICE}.`,
     siteName: 'BodyWorx',
   },
   twitter: {
@@ -87,8 +87,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 All content, programs and coaching services provided by BodyWorx are
                 intended for educational and informational purposes only and do not
                 guarantee specific results. This is not medical advice. Always consult
-                a qualified healthcare professional — including your obstetrician or
-                physiotherapist — before making changes to your diet, exercise, or
+                a qualified healthcare professional - including your obstetrician or
+                physiotherapist - before making changes to your diet, exercise, or
                 lifestyle during pregnancy. Client results and testimonials vary based
                 on individual factors such as consistency, medical history, lifestyle,
                 trimester, and adherence to the program. Outcomes are not typical or
@@ -120,13 +120,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </footer>
 
-        {/* Razorpay checkout script — always loaded for the modal to be available */}
+        {/* Razorpay checkout script - always loaded for the modal to be available */}
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"
           strategy="lazyOnload"
         />
 
-        {/* ── GA4 — renders only when ID is filled in ── */}
+        {/* ── GA4 - renders only when ID is filled in ── */}
         {GA4_MEASUREMENT_ID && (
           <>
             <Script
@@ -142,7 +142,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
 
-        {/* ── Microsoft Clarity — renders only when ID is filled in ── */}
+        {/* ── Microsoft Clarity - renders only when ID is filled in ── */}
         {CLARITY_PROJECT_ID && (
           <Script id="clarity-init" strategy="afterInteractive">{`
             (function(c,l,a,r,i,t,y){
@@ -153,7 +153,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}</Script>
         )}
 
-        {/* ── Meta Pixel base — init + PageView. Loads fbq globally so the
+        {/* ── Meta Pixel base - init + PageView. Loads fbq globally so the
             Meta Pixel Helper browser extension detects it, and so the existing
             window.fbq('track', ...) calls in lib/analytics.ts (InitiateCheckout,
             Purchase) actually fire. Server-side custom 'sales' event lives in

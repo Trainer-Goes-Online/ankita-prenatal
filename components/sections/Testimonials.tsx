@@ -15,25 +15,25 @@ type Review = { quote: string; author: string; role: string };
 const REVIEWS: Review[] = [
   {
     quote:
-      '"When she was just two months pregnant, she began her journey with me. Despite being told to rest because of a low-lying placenta, her determination never wavered. Week by week, with guided exercises and mindful care, we prepared her body and mind. And in the seventh month, when her baby was breech, we didn\'t give up. With focus, with strength, and with each breath, she brought her baby into the world — vaginally, naturally, beautifully."',
+      '"When she was just two months pregnant, she began her journey with me. Despite being told to rest because of a low-lying placenta, her determination never wavered. Week by week, with guided exercises and mindful care, we prepared her body and mind. And in the seventh month, when her baby was breech, we didn\'t give up. With focus, with strength, and with each breath, she brought her baby into the world - vaginally, naturally, beautifully."',
     author: 'A Mother\'s Journey',
     role: 'Shared by Dr. Ankita',
   },
   {
     quote:
-      '"Last night I delivered a healthy baby girl via vaginal delivery. When I first started your prenatal workouts, I wasn\'t sure what to expect. I had so many fears, but from the very first session, your knowledge, encouragement, and positivity reassured me. Every squat, every stepper, every pose, stretch, and breathwork session made me feel more prepared for labor. You called me on Saturday to share your experience about active labor — \'Trust your body, breathe, and stay strong.\' That\'s exactly what I did."',
+      '"Last night I delivered a healthy baby girl via vaginal delivery. When I first started your prenatal workouts, I wasn\'t sure what to expect. I had so many fears, but from the very first session, your knowledge, encouragement, and positivity reassured me. Every squat, every stepper, every pose, stretch, and breathwork session made me feel more prepared for labor. You called me on Saturday to share your experience about active labor - \'Trust your body, breathe, and stay strong.\' That\'s exactly what I did."',
     author: 'Smitha & Pram',
     role: 'Vaginal Delivery',
   },
   {
     quote:
-      '"Blessed with a baby boy yesterday morning. I had never exercised in my whole life, but you made me believe I could do it, even during pregnancy. I still can\'t believe I was lifting 10 kg weights till my 9th month under your guidance — and the result? A normal delivery with no complications. Doctors had earlier told me my baby was in breech position and there was a chance I might end up with a C-section. But with your diet plan, exercises, breathing techniques, and constant support, I recovered so much. The biggest surprise — my back pain completely disappeared within a month."',
+      '"Blessed with a baby boy yesterday morning. I had never exercised in my whole life, but you made me believe I could do it, even during pregnancy. I still can\'t believe I was lifting 10 kg weights till my 9th month under your guidance - and the result? A normal delivery with no complications. Doctors had earlier told me my baby was in breech position and there was a chance I might end up with a C-section. But with your diet plan, exercises, breathing techniques, and constant support, I recovered so much. The biggest surprise - my back pain completely disappeared within a month."',
     author: 'Bindra & Preet',
     role: 'Normal Delivery · Breech baby flipped',
   },
   {
     quote:
-      '"Four years ago, Yashashwini walked into my studio — curious, determined, and ready to build strength. When she discovered she was pregnant, she returned to us with a deeper purpose. We built a weekly plan, four to five days a week — lifting weights, guided by science, under my watchful eye. Every movement was safe, every breath intentional. Her baby settled in a perfect head-down position. Late one night past 11:30 p.m., she called me from the hospital. In that active labor phase, we guided her — live exercises, breathing cues, all through the night. By morning, she gave birth to a healthy baby, naturally, with strength and grace."',
+      '"Four years ago, Yashashwini walked into my studio - curious, determined, and ready to build strength. When she discovered she was pregnant, she returned to us with a deeper purpose. We built a weekly plan, four to five days a week - lifting weights, guided by science, under my watchful eye. Every movement was safe, every breath intentional. Her baby settled in a perfect head-down position. Late one night past 11:30 p.m., she called me from the hospital. In that active labor phase, we guided her - live exercises, breathing cues, all through the night. By morning, she gave birth to a healthy baby, naturally, with strength and grace."',
     author: 'Yashashwini\'s Birth Story',
     role: 'Shared by Dr. Ankita',
   },
@@ -125,7 +125,7 @@ export default function Testimonials() {
             <span className="bw-gradient-text">Trust BodyWorx</span>
           </h2>
           <p className="mt-4 text-[15px] text-ink-soft sm:mt-5 sm:text-[16px]">
-            Real moms. Real pregnancies. Real changes — in 3 days or less.
+            Real moms. Real pregnancies. Real changes - in 3 days or less.
           </p>
         </div>
       </div>

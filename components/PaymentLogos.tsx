@@ -1,7 +1,7 @@
 /**
  * Premium payment-method logo row. Inline SVGs (no external assets) so the
- * row reads as a polished brand strip — VISA, Mastercard, RuPay, UPI, Amex,
- * Maestro — instead of plain text labels.
+ * row reads as a polished brand strip - VISA, Mastercard, RuPay, UPI, Amex,
+ * Maestro - instead of plain text labels.
  *
  * Each logo is rendered inside a small white tile with a soft border so they
  * line up cleanly regardless of intrinsic aspect ratio.
@@ -138,7 +138,7 @@ function UpiLogo({ className }: LogoProps) {
         <tspan fill="#1A4FA0">P</tspan>
         <tspan fill="#F37021">I</tspan>
       </text>
-      {/* Tri-color triangle accent next to wordmark — UPI brand mark */}
+      {/* Tri-color triangle accent next to wordmark - UPI brand mark */}
       <g transform="translate(33,4)">
         <path d="M0 14 L 7 0 L 14 14 Z" fill="#097D3A" opacity="0.95" />
         <path d="M3 14 L 8.5 3 L 14 14 Z" fill="#1A4FA0" opacity="0.95" />
@@ -170,7 +170,7 @@ function MaestroLogo({ className }: LogoProps) {
 type Brand = { id: string; label: string; Logo: (p: LogoProps) => JSX.Element; w: string };
 
 // `compact` row drops Maestro (visually nearly identical to Mastercard) so the
-// most common 5 fit cleanly in a single row on mobile — no orphan logo wrapping
+// most common 5 fit cleanly in a single row on mobile - no orphan logo wrapping
 // to its own line. `full` row shows all 6 in the checkout strip.
 const COMPACT_LOGOS: Brand[] = [
   { id: 'visa', label: 'Visa', Logo: VisaLogo, w: 'w-9' },

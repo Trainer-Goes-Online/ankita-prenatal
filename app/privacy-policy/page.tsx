@@ -28,13 +28,13 @@ export default function PrivacyPolicyPage() {
           <strong>Communications:</strong> messages you send us via email, WhatsApp, or the community group.
         </li>
         <li>
-          <strong>Usage data:</strong> device type, browser, IP address, pages viewed, and approximate location — collected via cookies and analytics tools listed below.
+          <strong>Usage data:</strong> device type, browser, IP address, pages viewed, and approximate location - collected via cookies and analytics tools listed below.
         </li>
       </ul>
 
       <h2>2. How We Use Your Information</h2>
       <ul>
-        <li>To deliver the {CHECKOUT_CONFIG.challenge.days}-Day Challenge — including Zoom session links, replays, and follow-up materials.</li>
+        <li>To deliver the {CHECKOUT_CONFIG.challenge.days}-Day Challenge - including Zoom session links, replays, and follow-up materials.</li>
         <li>To provide customer support and respond to your questions about exercises, modifications, or your pregnancy stage.</li>
         <li>To send transactional emails and reminders related to your purchase.</li>
         <li>To improve our website, content, and educational material based on aggregated usage trends.</li>
@@ -44,18 +44,18 @@ export default function PrivacyPolicyPage() {
       <h2>3. Cookies &amp; Analytics Tools</h2>
       <p>We use a small number of analytics and marketing tools to understand how our site is being used and to deliver relevant content:</p>
       <ul>
-        <li><strong>Google Analytics 4</strong> — anonymised traffic and behaviour analytics.</li>
-        <li><strong>Microsoft Clarity</strong> — session recordings and heatmaps to improve site usability.</li>
-        <li><strong>Meta Pixel (Facebook &amp; Instagram)</strong> — used only if we run ads, to measure ad effectiveness.</li>
+        <li><strong>Google Analytics 4</strong> - anonymised traffic and behaviour analytics.</li>
+        <li><strong>Microsoft Clarity</strong> - session recordings and heatmaps to improve site usability.</li>
+        <li><strong>Meta Pixel (Facebook &amp; Instagram)</strong> - used only if we run ads, to measure ad effectiveness.</li>
       </ul>
       <p>You can block cookies through your browser settings. Please note that some site features may not work correctly with all cookies blocked.</p>
 
       <h2>4. How We Share Information</h2>
       <p>We do not sell your personal information. We share limited information only with trusted service providers that help us run the program:</p>
       <ul>
-        <li><strong>Razorpay</strong> — to process payments securely.</li>
-        <li><strong>Pabbly / email service providers</strong> — to send transactional emails and program access.</li>
-        <li><strong>Zoom</strong> — to host the live sessions.</li>
+        <li><strong>Razorpay</strong> - to process payments securely.</li>
+        <li><strong>Pabbly / email service providers</strong> - to send transactional emails and program access.</li>
+        <li><strong>Zoom</strong> - to host the live sessions.</li>
         <li>Government authorities or law enforcement when required by Indian law.</li>
       </ul>
 

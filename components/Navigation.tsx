@@ -34,7 +34,7 @@ export default function Navigation() {
       <div className="bw-wrap flex h-16 items-center justify-between md:h-[72px]">
         <Link
           href="/"
-          aria-label="BodyWorx — go to home"
+          aria-label="BodyWorx - go to home"
           className="flex items-center gap-2 font-heading text-[22px] font-extrabold tracking-tight text-ink"
         >
           <span

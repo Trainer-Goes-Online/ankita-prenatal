@@ -92,7 +92,7 @@ interface UtmData {
 
 /**
  * Fetch the authoritative payment record from Razorpay. We trust this over the
- * client because the amount might have been discounted by a coupon — Pabbly +
+ * client because the amount might have been discounted by a coupon - Pabbly +
  * CAPI must reflect what was actually paid, not the list price.
  */
 async function fetchActualPaidAmount(paymentId: string): Promise<{
@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // HMAC-SHA256 of "orderId|paymentId" — Razorpay protocol requirement
+      // HMAC-SHA256 of "orderId|paymentId" - Razorpay protocol requirement
       const expectedSignature = crypto
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
         .update(`${orderId}|${paymentId}`)
@@ -228,7 +228,7 @@ export async function POST(req: NextRequest) {
     const paidAmountRupeesString = (paidAmountPaise / 100).toString();
     const paidAmountRupeesNumeric = paidAmountPaise / 100;
 
-    // Payment verified — build Pabbly payload
+    // Payment verified - build Pabbly payload
     const now = new Date();
     const pabblyPayload = {
       first_name:        customer.firstName,
@@ -257,7 +257,7 @@ export async function POST(req: NextRequest) {
 
     console.log('[verify-payment] Verified purchase:', pabblyPayload);
 
-    // Fire Pabbly webhook (non-blocking — errors never surface to the user)
+    // Fire Pabbly webhook (non-blocking - errors never surface to the user)
     const webhookUrl = process.env.PABBLY_WEBHOOK_URL;
     if (webhookUrl) {
       try {
@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
         console.error('[verify-payment] Pabbly webhook error:', err);
       }
     } else {
-      console.error('[verify-payment] CRITICAL: PABBLY_WEBHOOK_URL not set — webhook skipped');
+      console.error('[verify-payment] CRITICAL: PABBLY_WEBHOOK_URL not set - webhook skipped');
     }
 
     // ── OPTIONAL BLOCK: META CONVERSIONS API ─────────────────────────────────
@@ -312,7 +312,7 @@ export async function POST(req: NextRequest) {
         console.error('[verify-payment] Meta CAPI error:', err);
       }
     } else {
-      console.error('[verify-payment] Meta CAPI skipped — META_PIXEL_ID or META_CAPI_ACCESS_TOKEN not set');
+      console.error('[verify-payment] Meta CAPI skipped - META_PIXEL_ID or META_CAPI_ACCESS_TOKEN not set');
     }
     // ── END OPTIONAL BLOCK ────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
 
 /* ──────────────────────────────────────────────────────────────────────
- *  Hall of Fame — two infinite marquees of client transformation photos.
+ *  Hall of Fame - two infinite marquees of client transformation photos.
  *  Row 1: t1–t17, scrolls left → right.
  *  Row 2: t18–t35, scrolls right → left.
  *  No dots, no arrows. Pure autoplay, slow + smooth (linear, ~80s/cycle).

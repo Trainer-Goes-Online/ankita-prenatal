@@ -15,7 +15,7 @@ export default function RefundPolicyPage() {
     <LegalPageLayout
       title="Refund Policy"
       effectiveDate="15 May 2026"
-      intro={`We stand behind the BodyWorx ${CHECKOUT_CONFIG.challenge.days}-Day Prenatal Challenge with a simple, no-questions-asked money-back guarantee. If you don’t feel the Program was right for you, we’ll refund you in full — quickly and politely.`}
+      intro={`We stand behind the BodyWorx ${CHECKOUT_CONFIG.challenge.days}-Day Prenatal Challenge with a simple, no-questions-asked money-back guarantee. If you don’t feel the Program was right for you, we’ll refund you in full - quickly and politely.`}
     >
       <h2>1. 100% Money-Back Guarantee</h2>
       <p>If you purchase the {CHECKOUT_CONFIG.challenge.days}-Day Prenatal Challenge (₹{PRICE}) and decide it&apos;s not the right fit, you can request a full refund within <strong>7 days</strong> of your purchase date. We will not ask intrusive questions or make you justify your decision.</p>
@@ -25,7 +25,7 @@ export default function RefundPolicyPage() {
         <li>
           Email <a href="mailto:Bodyworx.pfn@gmail.com">Bodyworx.pfn@gmail.com</a> from the same email address you used at checkout.
         </li>
-        <li>Use the subject line: <strong>&ldquo;Refund Request — {CHECKOUT_CONFIG.challenge.days}-Day Challenge&rdquo;</strong>.</li>
+        <li>Use the subject line: <strong>&ldquo;Refund Request - {CHECKOUT_CONFIG.challenge.days}-Day Challenge&rdquo;</strong>.</li>
         <li>Include your full name and the date of purchase. A one-line reason is optional but helps us improve.</li>
       </ul>
 
@@ -43,7 +43,7 @@ export default function RefundPolicyPage() {
       </ul>
 
       <h2>6. Chargebacks &amp; Disputes</h2>
-      <p>If you have a concern about your purchase, please email us first — we are responsive and refunds are easy. Initiating a chargeback with your bank without first contacting us may delay the resolution and may temporarily suspend your Program access while the dispute is being reviewed.</p>
+      <p>If you have a concern about your purchase, please email us first - we are responsive and refunds are easy. Initiating a chargeback with your bank without first contacting us may delay the resolution and may temporarily suspend your Program access while the dispute is being reviewed.</p>
 
       <h2>7. Free or Promotional Access</h2>
       <p>If you received the Program for free, at a heavily discounted promotional rate, or as part of a giveaway, refunds may not apply. The terms of any such promotion will be made clear at the time of the offer.</p>

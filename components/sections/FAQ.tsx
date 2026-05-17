@@ -7,23 +7,23 @@ import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 const FAQS = [
   {
     q: "I'm in my 1st / 2nd / 3rd trimester. Is this challenge safe for me?",
-    a: 'Yes. Every session is designed to be safe across all three trimesters. Dr. Ankita gives clear modifications based on which trimester you\'re in and how your body is feeling that day. If you\'ve been cleared for low-impact movement by your OB-GYN, you\'re a good fit. If you have a high-risk pregnancy (placenta previa, preterm labor risk, severe hyperemesis), please consult your doctor first — we\'ll happily refund you if you decide it isn\'t the right time.',
+    a: 'Yes. Every session is designed to be safe across all three trimesters. Dr. Ankita gives clear modifications based on which trimester you\'re in and how your body is feeling that day. If you\'ve been cleared for low-impact movement by your OB-GYN, you\'re a good fit. If you have a high-risk pregnancy (placenta previa, preterm labor risk, severe hyperemesis), please consult your doctor first - we\'ll happily refund you if you decide it isn\'t the right time.',
   },
   {
     q: "I haven't exercised in years. Can I still join?",
-    a: 'Absolutely — this challenge is built for women who are not currently exercising. Most participants are starting from zero. The foundation days focus on breathing, gentle mobility, and pelvic floor awareness — no jumping, no straining, no equipment. You move at your own pace and the live cues make sure your form stays safe.',
+    a: 'Absolutely - this challenge is built for women who are not currently exercising. Most participants are starting from zero. The foundation days focus on breathing, gentle mobility, and pelvic floor awareness - no jumping, no straining, no equipment. You move at your own pace and the live cues make sure your form stays safe.',
   },
   {
     q: "What if I can't attend the live sessions?",
-    a: `No problem. With ${CHECKOUT_CONFIG.challenge.timeSlotList.length} daily slots (${CHECKOUT_CONFIG.challenge.timeSlots}), most moms find at least one that works. Replays are shared the same day in our private community so you can practice on your own schedule. The replay covers the same flow, breathing, and corrections — you're never left behind.`,
+    a: `No problem. With ${CHECKOUT_CONFIG.challenge.timeSlotList.length} daily slots (${CHECKOUT_CONFIG.challenge.timeSlots}), most moms find at least one that works. Replays are shared the same day in our private community so you can practice on your own schedule. The replay covers the same flow, breathing, and corrections - you're never left behind.`,
   },
   {
     q: 'What equipment do I need? Do I need a gym membership?',
-    a: 'Nothing. No gym, no dumbbells, no equipment. A small clear space at home (about the size of a yoga mat), comfortable clothes, and a chair or wall for support is enough. If you have a yoga mat and a couple of pillows, even better — but nothing is required.',
+    a: 'Nothing. No gym, no dumbbells, no equipment. A small clear space at home (about the size of a yoga mat), comfortable clothes, and a chair or wall for support is enough. If you have a yoga mat and a couple of pillows, even better - but nothing is required.',
   },
   {
     q: 'How is this different from prenatal yoga or generic pregnancy workouts on YouTube?',
-    a: 'Two things. First, the method — Dr. Ankita is a women\'s health physiotherapist, not a generalist trainer. The sequencing (breathing → core/pelvic floor → mobility → labor prep → recovery) is built around how the prenatal body actually changes, not a one-size-fits-all flow. Second, the live correction — random YouTube routines can\'t see your posture or compensate for your trimester. Live cues catch the small alignment issues that often cause back, hip, or pelvic pain in the first place.',
+    a: 'Two things. First, the method - Dr. Ankita is a women\'s health physiotherapist, not a generalist trainer. The sequencing (breathing → core/pelvic floor → mobility → labor prep → recovery) is built around how the prenatal body actually changes, not a one-size-fits-all flow. Second, the live correction - random YouTube routines can\'t see your posture or compensate for your trimester. Live cues catch the small alignment issues that often cause back, hip, or pelvic pain in the first place.',
   },
 ];
 
@@ -49,7 +49,7 @@ export default function FAQ() {
             >
               Bodyworx.pfn@gmail.com
             </a>{' '}
-            — we reply within a few hours.
+            - we reply within a few hours.
           </p>
         </div>
 

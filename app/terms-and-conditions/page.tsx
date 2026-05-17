@@ -30,7 +30,7 @@ export default function TermsAndConditionsPage() {
       </ul>
 
       <h2>3. Medical Disclaimer</h2>
-      <p>The Program is provided for educational and informational purposes only. It is <strong>not medical advice, diagnosis, or treatment</strong>. Pregnancy is a unique medical state and individual conditions vary widely. You must consult your obstetrician, midwife, or qualified healthcare provider before beginning any exercise program — especially if you have a high-risk pregnancy, placenta previa, pre-eclampsia, cardiac conditions, or any concern raised by your doctor.</p>
+      <p>The Program is provided for educational and informational purposes only. It is <strong>not medical advice, diagnosis, or treatment</strong>. Pregnancy is a unique medical state and individual conditions vary widely. You must consult your obstetrician, midwife, or qualified healthcare provider before beginning any exercise program - especially if you have a high-risk pregnancy, placenta previa, pre-eclampsia, cardiac conditions, or any concern raised by your doctor.</p>
       <p>If you experience pain, dizziness, bleeding, contractions, or any unusual symptom during or after a session, stop immediately and seek medical care.</p>
 
       <h2>4. Eligibility</h2>

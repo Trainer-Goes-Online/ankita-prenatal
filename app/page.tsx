@@ -26,28 +26,28 @@ export default function HomePage() {
         {/* 3. Your 3-Day Schedule */}
         <DailySchedule />
 
-        {/* 4. Does this sound like you? — pain-point qualification */}
+        {/* 4. Does this sound like you? - pain-point qualification */}
         <DoesThisSoundLikeYou />
 
-        {/* 5. Why Pregnant Moms Trust BodyWorx — testimonials */}
+        {/* 5. Why Pregnant Moms Trust BodyWorx - testimonials */}
         <Testimonials />
 
-        {/* 5a. Video reels + long-form text reviews — dual marquee */}
+        {/* 5a. Video reels + long-form text reviews - dual marquee */}
         <VideoTestimonialsMarquee />
 
-        {/* 5b. Hall of Fame — transformation marquees */}
+        {/* 5b. Hall of Fame - transformation marquees */}
         {/* <HallOfFame /> */}
 
-        {/* 6. GET INSTANT ACCESS — primary value stack */}
+        {/* 6. GET INSTANT ACCESS - primary value stack */}
         <ValueStack variant="primary" />
 
         {/* 7. Meet Dr. Ankita */}
         <MeetAnkita />
 
-        {/* 8. Why this works — The BodyWorx Method */}
+        {/* 8. Why this works - The BodyWorx Method */}
         <BodyWorxMethod />
 
-        {/* 9. Let's be honest — Two-option comparison */}
+        {/* 9. Let's be honest - Two-option comparison */}
         <TwoOptions />
 
         {/* 11. FAQ */}

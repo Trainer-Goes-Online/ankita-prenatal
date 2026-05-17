@@ -19,7 +19,7 @@ import {
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 
 /* ──────────────────────────────────────────────────────────────────────
- *  Motion — exponential ease (Impeccable). No springs.
+ *  Motion - exponential ease (Impeccable). No springs.
  *  Pattern:
  *    Desktop = vertical tabs (left) + content panel (right).
  *      • Active tab has a `layoutId` background that morphs between tabs.
@@ -190,7 +190,7 @@ export default function DailySchedule() {
         </motion.div>
 
         {/* ─────────────────────────────────────────────────────────────
-         *  DESKTOP — Vertical tabs + content panel
+         *  DESKTOP - Vertical tabs + content panel
          *  Active tab uses layoutId for the morphing pill background.
          *  Panel crossfades via AnimatePresence mode="wait".
          * ──────────────────────────────────────────────────────────── */}
@@ -223,7 +223,7 @@ export default function DailySchedule() {
                         onFocus={() => setHoverIdx(i)}
                         className="group relative flex w-full items-center gap-4 rounded-2xl px-5 py-4 text-left transition-colors hover:bg-white/40"
                       >
-                        {/* Morphing active background — the signature animation */}
+                        {/* Morphing active background - the signature animation */}
                         {isActive && (
                           <motion.span
                             layoutId="activeDayTabBg"
@@ -350,7 +350,7 @@ export default function DailySchedule() {
                       ))}
                     </div>
 
-                    {/* Progress dots — reflects whichever day is currently shown (hover or click) */}
+                    {/* Progress dots - reflects whichever day is currently shown (hover or click) */}
                     <div className="absolute right-7 bottom-7 flex gap-1.5 md:right-10 md:bottom-10">
                       {DAYS.map((_, i) => (
                         <span
@@ -373,7 +373,7 @@ export default function DailySchedule() {
         </LayoutGroup>
 
         {/* ─────────────────────────────────────────────────────────────
-         *  MOBILE + TABLET — Accordion (one open at a time)
+         *  MOBILE + TABLET - Accordion (one open at a time)
          * ──────────────────────────────────────────────────────────── */}
         <motion.ol
           initial={initial}

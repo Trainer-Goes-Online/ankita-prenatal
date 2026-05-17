@@ -61,7 +61,7 @@ export default function WhatYoullExperience() {
             <span className="bw-gradient-text">Experience in 3 Days</span>
           </h2>
           <p className="mt-4 text-[15px] text-ink-soft sm:mt-5 sm:text-[16px]">
-            A simple, live prenatal preparation experience — so you can feel safer,
+            A simple, live prenatal preparation experience - so you can feel safer,
             move better, and experience the difference before committing long-term.
           </p>
         </div>

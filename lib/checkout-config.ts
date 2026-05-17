@@ -1,5 +1,5 @@
 /**
- * Prenatal challenge — checkout config (single source of truth).
+ * Prenatal challenge - checkout config (single source of truth).
  *
  * Price is env-controlled so it can be changed without touching code:
  *
@@ -11,7 +11,7 @@
  * Razorpay/Pabbly/CAPI calls.
  *
  * Per BACKEND_SOP.md the three amount representations are confirmed
- * separately and never derived from each other — they're all sourced here
+ * separately and never derived from each other - they're all sourced here
  * from the same PRICE_RUPEES env value:
  *   - Razorpay  → paise, numeric  (PRICE_RUPEES × 100)
  *   - Pabbly    → rupees, string  (String(PRICE_RUPEES))
@@ -41,7 +41,7 @@ const CHALLENGE_BRAND_NAME = `${CHALLENGE_DAYS}-Day Prenatal Pain Relief & Labor
  * "IST" / "UTC" from the last slot. Used by DailySchedule's pill row.
  */
 function parseTimeSlots(s: string): string[] {
-  const parts = s.split(/[·,]/).map((p) => p.trim()).filter(Boolean);
+  const parts = s.split(/[·,/]/).map((p) => p.trim()).filter(Boolean);
   if (parts.length === 0) return [];
   parts[parts.length - 1] = parts[parts.length - 1].replace(/\s+[A-Z]{2,4}$/, '');
   return parts;

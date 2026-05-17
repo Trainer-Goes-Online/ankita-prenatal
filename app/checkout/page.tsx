@@ -10,8 +10,8 @@ export const metadata = {
 
 export default function CheckoutPage() {
   return (
-    <main className="min-h-screen bg-rose-radial">
-      {/* Minimal page header — wordmark + back link (replaces removed navbar) */}
+    <main className="min-h-screen overflow-x-hidden bg-rose-radial">
+      {/* Minimal page header - wordmark + back link (replaces removed navbar) */}
       <div className="bw-wrap flex items-center justify-between pt-5 sm:pt-7">
         <Link
           href="/"

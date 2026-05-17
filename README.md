@@ -1,4 +1,4 @@
-# BodyWorx — Prenatal Challenge
+# BodyWorx - Prenatal Challenge
 
 Next.js 14 (App Router) site for the **3-Day Prenatal Pain Relief & Labor Prep Challenge** (₹297).
 
@@ -19,8 +19,8 @@ Domain target: `bodyworx.in` (primary).
 | `/privacy-policy` | Privacy policy |
 | `/terms-and-conditions` | Terms of use |
 | `/refund-policy` | 7-day money-back guarantee |
-| `/api/razorpay/create-order` | Server route — creates Razorpay order |
-| `/api/razorpay/verify-payment` | Server route — verifies HMAC signature |
+| `/api/razorpay/create-order` | Server route - creates Razorpay order |
+| `/api/razorpay/verify-payment` | Server route - verifies HMAC signature |
 
 ## Local setup
 
@@ -35,7 +35,7 @@ Visit http://localhost:3000.
 
 ## Required environment variables
 
-See `.env.local.example`. The Razorpay keys can be **shared** with the postpartum project (same merchant account), but the **Meta Pixel ID must be unique per project** — this is exactly why the prenatal and postpartum funnels are split into separate codebases.
+See `.env.local.example`. The Razorpay keys can be **shared** with the postpartum project (same merchant account), but the **Meta Pixel ID must be unique per project** - this is exactly why the prenatal and postpartum funnels are split into separate codebases.
 
 ## Deploy to Vercel
 

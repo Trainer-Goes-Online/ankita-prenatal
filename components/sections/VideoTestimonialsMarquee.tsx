@@ -5,7 +5,7 @@ import { Heart, Play } from '@phosphor-icons/react/dist/ssr';
 import LocalVideoLightbox from '@/components/LocalVideoLightbox';
 
 /* ──────────────────────────────────────────────────────────────────────
- *  "Hear from Our Moms" — 3 phone-styled video thumbnails.
+ *  "Hear from Our Moms" - 3 phone-styled video thumbnails.
  *  Each tile shows the first frame as a poster (no autoplay).
  *  Click → modal lightbox plays the video with native controls.
  *  Mobile: horizontal swipeable row. Desktop: centered row.
@@ -42,7 +42,7 @@ function PhoneVideoThumbnail({
         {/* The video element itself is the poster.
             #t=0.1 fragment seeks to 0.1s so the first real frame paints
             (not the codec-black initial frame). Muted + playsInline +
-            preload=metadata keeps it lightweight — no playback starts. */}
+            preload=metadata keeps it lightweight - no playback starts. */}
         <video
           src={`${src}#t=0.1`}
           muted
@@ -160,7 +160,7 @@ export default function VideoTestimonialsMarquee() {
         ))}
       </div>
 
-      {/* Lightbox — controlled by the click handlers on each phone tile */}
+      {/* Lightbox - controlled by the click handlers on each phone tile */}
       <LocalVideoLightbox src={openSrc} onClose={() => setOpenSrc(null)} />
     </section>
   );

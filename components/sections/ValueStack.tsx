@@ -14,10 +14,10 @@ import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
  *  individual prices summing to ₹10,000+, with the final ₹1 below.
  *
  *  Two visual variants share the same data:
- *    • variant="primary" — used mid-page after social proof.
+ *    • variant="primary" - used mid-page after social proof.
  *      Heading: "GET INSTANT ACCESS TO Your 3-Day Prenatal Pain Relief &
  *      Labor Prep Experience"
- *    • variant="recap" — used near the bottom as a final close.
+ *    • variant="recap" - used near the bottom as a final close.
  *      Heading: "Recap of everything you'll get".
  * ─────────────────────────────────────────────────────────────────── */
 const EASE_QUINT: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -45,7 +45,7 @@ const ITEMS: LineItem[] = [
   { label: 'Daily Pregnancy Posture & Movement Corrections', value: 1000 },
 ];
 
-const TOTAL_VALUE = 10000; // marketing total (matches PDF — sum of line items rounded)
+const TOTAL_VALUE = 10000; // marketing total (matches PDF - sum of line items rounded)
 const FINAL_PRICE = CHECKOUT_CONFIG.amountRupeesNumeric;
 
 function formatINR(n: number) {

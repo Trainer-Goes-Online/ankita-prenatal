@@ -24,7 +24,7 @@ function pushDataLayer(event: string, params: EventParams = {}) {
 
 export function trackBeginCheckout(value: number, currency = 'INR') {
   // GA4 only. Meta only receives the custom server-side 'sales' event after a
-  // verified Razorpay payment — that's the authoritative conversion signal we
+  // verified Razorpay payment - that's the authoritative conversion signal we
   // optimise ads on (CPR). Client-side standard events are intentionally not
   // fired here so they don't compete with 'sales' in Meta's attribution.
   pushDataLayer('begin_checkout', { value, currency });
@@ -40,7 +40,7 @@ export function trackPurchaseComplete(params: {
   currency?: string;
 }) {
   // GA4 only. The Meta conversion is reported server-side as the custom 'sales'
-  // event via CAPI in /api/razorpay/verify-payment — more accurate than the
+  // event via CAPI in /api/razorpay/verify-payment - more accurate than the
   // browser pixel (which is blocked by ad blockers / iOS tracking prevention).
   pushDataLayer('purchase_complete', {
     transaction_id: params.paymentId,

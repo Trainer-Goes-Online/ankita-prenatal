@@ -143,7 +143,7 @@ function ThankYouContent() {
         </div>
       </section>
 
-      {/* ── WhatsApp Community CTA — the most important next action ─────── */}
+      {/* ── WhatsApp Community CTA - the most important next action ─────── */}
       <section className="pb-4 md:pb-8">
         <div className="bw-wrap">
           <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl shadow-card">
@@ -253,11 +253,11 @@ function ThankYouContent() {
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
                   Thank you for trusting me with these 3 days. I&apos;ve seen too many
                   pregnant moms told to &ldquo;just rest&rdquo; while their pain and
-                  fear quietly get louder — that&apos;s why we built this. Come as you
+                  fear quietly get louder - that&apos;s why we built this. Come as you
                   are on Day 1. We&apos;ll handle the rest, together.
                 </p>
                 <p className="mt-3 font-heading text-sm font-semibold text-brand-deep">
-                  — Dr. Ankita, Women&apos;s Health Physiotherapist
+                  - Dr. Ankita, Women&apos;s Health Physiotherapist
                 </p>
               </div>
             </div>
@@ -413,7 +413,7 @@ function ThankYouContent() {
                   </h3>
                   <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
                     Don&apos;t love the challenge? Email us within 7 days and we&apos;ll
-                    refund your ₹{CHECKOUT_CONFIG.amountRupeesNumeric} instantly — no
+                    refund your ₹{CHECKOUT_CONFIG.amountRupeesNumeric} instantly - no
                     questions, no forms, no waiting.
                   </p>
                 </div>
@@ -474,13 +474,13 @@ const NEXT_STEPS: { icon: typeof Envelope; title: string; description: string }[
     icon: Envelope,
     title: 'Confirmation email in your inbox',
     description:
-      'Within the next 5 minutes — your receipt plus a link to join the private community where we share Zoom links, replays, and day-of reminders.',
+      'Within the next 5 minutes - your receipt plus a link to join the private community where we share Zoom links, replays, and day-of reminders.',
   },
   {
     icon: ChatCircleDots,
-    title: 'WhatsApp community — join above ↑',
+    title: 'WhatsApp community - join above ↑',
     description:
-      'A small, moderated group of pregnant moms doing the challenge alongside you. This is where Zoom links, daily reminders, and replays are shared — make sure you tap the green button above to join.',
+      'A small, moderated group of pregnant moms doing the challenge alongside you. This is where Zoom links, daily reminders, and replays are shared - make sure you tap the green button above to join.',
   },
   {
     icon: CalendarBlank,
@@ -531,6 +531,6 @@ const PREP_CARDS = [
   {
     title: 'Note where you feel it most',
     description:
-      'Jot down the top 1–2 pain points or worries you want to address — lower back, hips, pelvic floor, labor anxiety. Dr. Ankita will reference them across the 3 days.',
+      'Jot down the top 1–2 pain points or worries you want to address - lower back, hips, pelvic floor, labor anxiety. Dr. Ankita will reference them across the 3 days.',
   },
 ];

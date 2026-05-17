@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 /* ──────────────────────────────────────────────────────────────────────
- *  <CountUp> — animates a number from 0 to `end` once it scrolls into
+ *  <CountUp> - animates a number from 0 to `end` once it scrolls into
  *  view. Eases out cubic, supports decimals, prefix, suffix.
  *  Respects `prefers-reduced-motion` by snapping to the end value.
  * ─────────────────────────────────────────────────────────────────── */

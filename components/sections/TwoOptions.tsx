@@ -101,7 +101,7 @@ export default function TwoOptions() {
 
           {/* Two cards */}
           <div className="mt-12 grid gap-5 sm:mt-14 md:grid-cols-2 md:gap-6 lg:gap-8">
-            {/* ── OPTION 1 — muted, what happens if you don't act ── */}
+            {/* ── OPTION 1 - muted, what happens if you don't act ── */}
             <motion.div variants={option1}>
               <article
                 className="relative flex h-full flex-col overflow-hidden rounded-[28px] border border-line bg-cream-fade p-7 md:p-9"
@@ -160,7 +160,7 @@ export default function TwoOptions() {
               </article>
             </motion.div>
 
-            {/* ── OPTION 2 — vibrant, the right choice ── */}
+            {/* ── OPTION 2 - vibrant, the right choice ── */}
             <motion.div variants={option2}>
               <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] bg-brand-gradient p-7 text-white shadow-[0_30px_80px_-20px_rgba(146,68,83,0.45)] md:p-9">
                 {/* Light wash */}
@@ -213,7 +213,7 @@ export default function TwoOptions() {
                 <p className="relative mt-4 text-[14.5px] leading-relaxed text-white/90 sm:text-[15.5px]">
                   Learn how to safely move, breathe, and prepare your body with{' '}
                   <strong className="text-white">physiotherapist-guided support</strong>{' '}
-                  — so you feel stronger, more confident, and more prepared.
+                  - so you feel stronger, more confident, and more prepared.
                 </p>
 
                 <ul className="relative mt-6 space-y-3 border-t border-white/20 pt-6">

@@ -16,7 +16,7 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
 /**
  * For 100%-off coupons we can't create a Razorpay order (₹0 is below Razorpay's
  * minimum). Instead we mint a server-signed free-order token. verify-payment
- * recomputes this HMAC to confirm the free order is legitimate — without it,
+ * recomputes this HMAC to confirm the free order is legitimate - without it,
  * a client could fabricate any `free_xxx` order ID and trigger a fake Pabbly
  * webhook. Signing key is RAZORPAY_KEY_SECRET (already server-only).
  */
@@ -30,7 +30,7 @@ function signFreeOrder(orderId: string, couponCode: string): string {
 export async function POST(req: NextRequest) {
   try {
     if (!razorpay || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('[create-order] Razorpay not configured — missing environment variables');
+      console.error('[create-order] Razorpay not configured - missing environment variables');
       return NextResponse.json(
         { error: 'Payment system not configured. Please contact support.' },
         { status: 500 }

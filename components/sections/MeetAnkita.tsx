@@ -52,7 +52,7 @@ export default function MeetAnkita() {
         </div>
 
         <div className="grid items-center gap-10 sm:gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-          {/* LEFT — Real founder portrait + nameplate + credentials card BELOW
+          {/* LEFT - Real founder portrait + nameplate + credentials card BELOW
               the image (no overlap with the photo, no awkward inset cropping). */}
           <div className="relative mx-auto w-full max-w-md lg:mx-0">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[32px] shadow-card">
@@ -96,7 +96,7 @@ export default function MeetAnkita() {
               </div>
             </div>
 
-            {/* Credentials card — now sits cleanly BELOW the photo, no overlap. */}
+            {/* Credentials card - now sits cleanly BELOW the photo, no overlap. */}
             <div className="mt-5 rounded-2xl border border-line bg-white p-4 shadow-card sm:mt-6">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-deep">
                 Credentials
@@ -123,7 +123,7 @@ export default function MeetAnkita() {
             </div>
           </div>
 
-          {/* RIGHT — bio */}
+          {/* RIGHT - bio */}
           <div>
             <h2 className="font-heading text-[28px] font-extrabold leading-[1.1] text-ink sm:text-[38px] lg:text-[50px]">
               Why hundreds of pregnant moms{' '}
@@ -132,7 +132,7 @@ export default function MeetAnkita() {
 
             <div className="mt-6 space-y-4 text-[15.5px] leading-relaxed text-ink-soft sm:text-base">
               <p>
-                Women&apos;s health physiotherapist, prenatal coach, and mom —
+                Women&apos;s health physiotherapist, prenatal coach, and mom -
                 with <strong className="text-ink">12+ years</strong> guiding
                 pregnant women through safer movement, less pain, and stronger
                 labor prep.
@@ -142,7 +142,7 @@ export default function MeetAnkita() {
                 while their pain and fear quietly grow. The truth no one teaches
                 them?{' '}
                 <strong className="text-ink">
-                  Your body can be prepared for birth — properly.
+                  Your body can be prepared for birth - properly.
                 </strong>
               </p>
             </div>
@@ -151,22 +151,22 @@ export default function MeetAnkita() {
               <p className="font-heading text-lg font-bold leading-snug text-ink sm:text-xl">
                 &ldquo;Pregnancy doesn&apos;t need more fear or random advice.{' '}
                 <span className="bw-gradient-text">
-                  It needs the right movement, breathing, and support — at the right time.
+                  It needs the right movement, breathing, and support - at the right time.
                 </span>
                 &rdquo;
               </p>
               <footer className="mt-3 text-sm font-medium text-ink-soft">
-                — Dr. Ankita, Founder, BodyWorx
+                - Dr. Ankita, Founder, BodyWorx
               </footer>
             </blockquote>
 
             <p className="mt-6 text-[15.5px] leading-relaxed text-ink-soft sm:text-base">
               That&apos;s why she built the{' '}
-              <strong className="text-ink">3-Day Prenatal Challenge</strong> —
+              <strong className="text-ink">3-Day Prenatal Challenge</strong> -
               feel the method first, decide only after.
             </p>
 
-            {/* Stats strip — counts up from 0 once they scroll into view */}
+            {/* Stats strip - counts up from 0 once they scroll into view */}
             <ul className="mt-8 grid grid-cols-3 gap-3 sm:gap-5">
               {STATS.map((s) => (
                 <li

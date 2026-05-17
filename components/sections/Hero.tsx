@@ -18,7 +18,7 @@ import {
 } from '@phosphor-icons/react/dist/ssr';
 
 /* ──────────────────────────────────────────────────────────────────────
- *  Motion — exponential ease, no springs (Impeccable).
+ *  Motion - exponential ease, no springs (Impeccable).
  * ─────────────────────────────────────────────────────────────────── */
 const EASE_QUINT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -74,7 +74,7 @@ export default function Hero() {
 
   return (
     <section className="relative bg-cream-fade">
-      {/* ────────────────── 1. Top urgency strip — DARK marquee ──────────────────
+      {/* ────────────────── 1. Top urgency strip - DARK marquee ──────────────────
        * Two copies of the content sit inside a `width: max-content` track and
        * the track animates -50% to land exactly on the duplicate, producing a
        * seamless loop. `prefers-reduced-motion` halts entirely.
@@ -115,7 +115,7 @@ export default function Hero() {
         variants={container}
         className="bw-wrap relative z-10 pt-10 pb-14 sm:pt-12 sm:pb-20 lg:pt-14 lg:pb-24"
       >
-        {/* Struggle pill bar — LIGHT (alternates with the dark marquee above) */}
+        {/* Struggle pill bar - LIGHT (alternates with the dark marquee above) */}
         <motion.div variants={item} className="mx-auto max-w-4xl">
           <p className="rounded-pill border border-brand-soft bg-brand-soft px-5 py-2.5 text-center text-[10.5px] font-bold uppercase leading-snug tracking-[0.12em] text-brand-deep shadow-soft sm:text-[11px] sm:tracking-[0.16em] md:px-7 md:py-3">
             <LiveDot />
@@ -178,7 +178,7 @@ export default function Hero() {
             <div className="relative">
               {/* Main portrait card */}
               <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-[0_30px_80px_-20px_rgba(146,68,83,0.45)]">
-                {/* Background photo — clean, no tint */}
+                {/* Background photo - clean, no tint */}
                 <Image
                   src="/transformations/drankitabg.jpeg"
                   alt=""
@@ -188,7 +188,7 @@ export default function Hero() {
                   priority
                 />
 
-                {/* Identity caption — editorial glass chip */}
+                {/* Identity caption - editorial glass chip */}
                 <div className="absolute inset-x-0 bottom-20 flex justify-center px-5 sm:bottom-24">
                   <div className="inline-flex flex-col items-center rounded-2xl bg-black/40 px-6 py-3.5 text-center shadow-[0_18px_50px_-12px_rgba(0,0,0,0.55)] ring-1 ring-white/25 backdrop-blur-md sm:px-7 sm:py-4">
                     <p className="font-editorial text-[26px] font-semibold leading-none tracking-tight text-white sm:text-[32px]">
@@ -322,7 +322,7 @@ export default function Hero() {
                 />
               </Link>
 
-              {/* Trust line — each fact is its own whitespace-nowrap chunk so
+              {/* Trust line - each fact is its own whitespace-nowrap chunk so
                   a single fact never breaks across two lines on narrow screens. */}
               <p className="relative mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-center text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-soft sm:text-[11px] sm:tracking-[0.16em]">
                 <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
@@ -389,7 +389,7 @@ export default function Hero() {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
- *  Trust-strip item — single source of truth so the mobile rating row
+ *  Trust-strip item - single source of truth so the mobile rating row
  *  and the 2/5-col grid share identical content + sizing. `whitespace-
  *  nowrap` keeps each label on a single line at any cell width.
  * ─────────────────────────────────────────────────────────────────── */
@@ -445,7 +445,7 @@ function GuaranteeSeal() {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
- *  Marquee content group — rendered twice inside the track so the loop
+ *  Marquee content group - rendered twice inside the track so the loop
  *  is seamless. The duplicate is `aria-hidden` so screen readers only
  *  hear one copy.
  * ─────────────────────────────────────────────────────────────────── */
@@ -502,10 +502,10 @@ function Dot() {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
- *  Live dot — sits inline at the LEFT of the struggle pill copy.
+ *  Live dot - sits inline at the LEFT of the struggle pill copy.
  *  Uses inline-grid place-items-center so the dot and the ping share the
  *  exact same grid cell; the ping then scales from its own center, which
- *  IS the dot's center — no offset, regardless of inline baseline quirks.
+ *  IS the dot's center - no offset, regardless of inline baseline quirks.
  * ─────────────────────────────────────────────────────────────────── */
 function LiveDot() {
   return (

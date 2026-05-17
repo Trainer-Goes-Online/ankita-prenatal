@@ -43,7 +43,7 @@ export default function FinalCTA() {
 
           <p className="mx-auto mt-4 max-w-3xl text-[15px] leading-relaxed text-white/90 sm:mt-5 sm:text-[16px]">
             Spend 3 days with a physiotherapist who actually understands the prenatal
-            body — and feel the difference yourself, before committing to anything
+            body - and feel the difference yourself, before committing to anything
             longer-term.
           </p>
 
