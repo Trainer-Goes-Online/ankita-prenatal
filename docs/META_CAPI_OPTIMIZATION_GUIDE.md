@@ -8,14 +8,14 @@ Pattern reference repo: `Trainer-Goes-Online/ankita-prenatal`, file `app/api/raz
 
 ## What this pattern does (in one paragraph)
 
-Every successful paid transaction triggers **a single server-side HTTP call to Meta's Conversions API that contains TWO events** in one payload: the standard `Purchase` event (used for campaign optimization and AEM iOS attribution) AND a project-specific custom event (e.g. `sales`, `leads`, `signup`) used as the internal source-of-truth label. Both events share the same `event_id` (the payment/transaction ID) and the same full `user_data` block (hashed email, phone, first name, last name, city, country, plus raw fbc/fbp cookies, IP, user agent). Both events include `event_source_url` so they survive Meta's restricted-category enforcement. Client-side pixel fires only `PageView`. Free QA-coupon transactions are skipped entirely.
+Every successful paid transaction triggers **a single server-side HTTP call to Meta's Conversions API that contains TWO events** in one payload: the standard `Purchase` event (used for campaign optimization, benefits from Meta's mature global ML priors and iOS attribution) AND a project-specific custom event (e.g. `sales`, `leads`, `signup`) used as the internal source-of-truth label. Both events share the same `event_id` (the payment/transaction ID) and the same full `user_data` block (hashed email, phone, first name, last name, city, country, plus raw fbc/fbp cookies, IP, user agent). Both events include `event_source_url` so they survive Meta's restricted-category enforcement. Client-side pixel fires only `PageView` (plus Manual Advanced Matching on the success page redirect — see `AGENT_PROMPT_META_MAM_ROLLOUT.md`). Free QA-coupon transactions are skipped entirely.
 
 ---
 
 ## Why this works (the four mechanisms)
 
 1. **High EMQ via 11 matching signals.** Meta scores Event Match Quality from the user_data block. Sending 6 hashed PII fields + 4 server-context fields + event_source_url pushes EMQ to 9+/10, which multiplies the attribution rate from ~40-60% (URL-inferred) to 85-95%. More attributed conversions → algorithm learns faster → CPR drops.
-2. **AEM iOS coverage via standard Purchase.** iOS 14.5+ ATT limits Meta to 8 prioritized events per dataset. `Purchase` is auto-priority 1. Custom events require manual prioritization and would demote something else. Firing `Purchase` keeps iOS attribution automatic.
+2. **Standard `Purchase` benefits from Meta's mature global ML priors.** Meta's algorithm has billions of `Purchase` events to learn from globally — custom event names start cold with no semantic understanding. iOS attribution (post-Oct 2024 AEM update) is now automatic, but standard events still receive preferential handling in Meta's models. Firing `Purchase` keeps you in the well-trodden path.
 3. **Restricted-category compliance via event_source_url.** Since Feb 2021 Meta requires `event_source_url` for all `action_source: 'website'` events; for restricted categories (health, financial, pregnancy, political) Meta now strictly enforces it with a 60-day blocking deadline. Including it from day 1 prevents events being silently dropped.
 4. **Dedup safety via shared event_id.** Both events use the transaction ID as `event_id`. If a browser pixel ever fires `Purchase` with the same id within 48h, Meta dedupes (same event_name + same event_id rule). Custom event doesn't dedupe against `Purchase` because event_name differs.
 
@@ -222,10 +222,10 @@ After making the changes, the agent should output a structured summary the user 
 | Sending events one at a time in separate HTTP calls | Wastes API quota, complicates dedup, no atomicity. Always batch into one `data: [...]` array. |
 | Hashing fbc/fbp/IP/UA | These are sent **raw**. Hashing breaks them as matching signals. |
 | Sending `value` in paise/cents | Meta expects major units (rupees, dollars). 297 not 29700. |
-| Sending the custom event without the standard `Purchase` | Loses AEM iOS auto-priority. Custom events have no global model priors. |
+| Sending the custom event without the standard `Purchase` | Custom events have no global model priors — Meta has no semantic understanding of "sales" until per-account training accumulates. Standard `Purchase` benefits from billions of cross-account training events. |
 | Skipping `event_source_url` because "we don't have a URL server-side" | Always pass from client. If you can't, hardcode the production checkout URL as a fallback. Without it, restricted-category accounts will have events dropped after the 60-day enforcement deadline. |
-| Adding the custom event to AEM priorities | Wastes an iOS attribution slot. Purchase already covers paid conversions for iOS. |
-| Optimizing campaigns on the custom event instead of Purchase | Loses AEM iOS attribution. Loses Meta's mature global algorithm priors. Only do this in the rare cases described in `META_BUYER_PLAYBOOK.md`. |
+| Trying to configure AEM event priorities | Meta deprecated the 8-event AEM cap and the manual prioritization UI in Oct 2024. AEM is now automatic. If you see no "Web Events Configuration" tab in Events Manager, that's the new normal — don't open a support ticket. |
+| Optimizing campaigns on the custom event instead of Purchase | Loses Meta's mature global algorithm priors. Custom events start cold. Only do this in the rare cases described in `META_BUYER_PLAYBOOK.md`. |
 | Forgetting the free-coupon guard | Test/QA transactions get reported to Meta as real conversions → algorithm learns the wrong audience. |
 | Allow-listing staging/preview domains in Meta | Events from preview URLs flood the pixel with non-real traffic during development. Allow-list production domain only. |
 

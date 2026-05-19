@@ -58,14 +58,91 @@ Document the before/after CPR. This is the single biggest improvement you can ma
 
 ---
 
-## Aggregated Event Measurement (AEM) for iOS — confirm setup
+## Aggregated Event Measurement (AEM) for iOS — what changed (Oct 2024) and what's left to do
 
-iOS users (likely 60-70% of your prenatal traffic) only "see" up to 8 events that you've prioritized via AEM. If your priority list is wrong, you lose iOS attribution silently.
+### Meta's October 2024 overhaul of AEM
 
-1. Open **Events Manager → Web Events Configuration** (look for "Aggregated Event Measurement" section).
-2. Confirm position 1 is **Purchase** (auto-prioritized — leave it).
-3. Lower positions (2-8) can stay default or be filled with funnel events you might add later (`InitiateCheckout`, `AddToCart`, `Lead`, etc.).
-4. **Do NOT add `sales` to the AEM list.** Purchase already covers your paid conversions for iOS. Adding sales would waste a slot for zero benefit (sales fires on identical transactions to Purchase).
+Per Meta's current AEM documentation, the AEM configuration workflow for website conversion campaigns has been deprecated:
+
+- **The 8-event priority cap is GONE.** No more "prioritize eight conversion events per domain."
+- **The Aggregated Event Measurement tab has been removed from Events Manager.** There's no UI to configure.
+- **Value sets are no longer required** to use Value Optimization.
+- **Domain verification is no longer required for AEM event processing** (you may still need it for other Meta features).
+- **No "conversion domain" selection** in Ads Manager campaign creation.
+- **All eligible events are now processed through AEM automatically** — nothing to configure, nothing to maintain.
+
+If your Events Manager has no "Web Events Configuration" or "Aggregated Event Measurement" section anymore, that's the new behavior. Not a bug. Not missing — Meta removed it.
+
+### What still matters about iOS attribution (unchanged)
+
+The configuration burden is gone, but the underlying iOS ATT environment is unchanged:
+
+- iOS opt-outs are still ~75-80% of iOS users in India. Apple's tracking restrictions are unchanged.
+- Default iOS attribution still shrinks to 1-day click windows (vs. 7-day on web) for opt-outs.
+- **CAPI still bypasses ATT entirely.** Server-to-server traffic never enters Apple's tracking restrictions. This is why your funnel was built on CAPI in the first place, and AEM's UI removal doesn't change its value.
+
+### Why we still fire `Purchase` alongside `sales`
+
+The "AEM 8-event slot" reason no longer applies (no more slots to defend). But the other reasons still hold:
+
+- **Standard `Purchase` benefits from Meta's mature global ML priors.** Meta's models have billions of `Purchase` events to learn from globally — custom event names like `sales` start cold with no semantic understanding.
+- **Backup signal.** If `sales` gets disrupted (config error, future change), `Purchase` keeps reporting.
+- **Same `event_id` provides dedup safety net** against any other source that may fire `Purchase` (URL inference, future code, etc.).
+
+Firing both at zero marginal cost (single HTTP call, shared payload) is still the right call.
+
+### What to do in Events Manager now
+
+**Nothing.** AEM no longer requires configuration. If your account hasn't fully migrated and you still see the old "Web Events Configuration" / 8-slot priority UI:
+
+1. Leave `Purchase` at position 1 (it's the auto-default).
+2. Do NOT add `sales` to the list — no benefit, same-session rules would still apply.
+3. Don't reshuffle anything (the old 72-hour cooldown still applies during the transition period).
+
+Otherwise: this section is now purely informational. There's no recurring AEM hygiene task.
+
+---
+
+## "Track events automatically without code" toggle — turn this OFF
+
+### What this toggle does (and why it's now redundant)
+
+In Events Manager → dataset Settings → Event setup section, there's a toggle labeled **"Track events automatically without code."** When ON, Meta inspects every page on your site and infers events from URL patterns, button text, and page metadata — without any pixel code calling `fbq('track', ...)`.
+
+Typical inferences:
+- User lands on `/thank-you` → Meta infers a `Purchase` event
+- User clicks a button containing "Submit" or "Register" → Meta infers `Lead`
+- User on `/checkout` → Meta infers `InitiateCheckout`
+
+This is exactly what was generating the "inferred Purchase" events you saw before CAPI was implemented. Now that the funnel fires Purchase from CAPI with full identity (event_id, hashed PII, fbc/fbp/IP/UA, event_source_url), the auto-detected events are **redundant with CAPI events but at much lower quality**.
+
+### Why ON hurts data quality (post-CAPI)
+
+| Behavior | Toggle ON | Toggle OFF |
+|---|---|---|
+| Purchase event count | Inflated (CAPI Purchase + auto-inferred Purchase, each `/thank-you` visit counts) | Clean (CAPI only) |
+| Dedup against CAPI | Impossible — inferred event has no `event_id` | N/A |
+| Average EMQ for Purchase | Drops — inferred events have EMQ 3-5/10, dragging your 9+/10 CAPI score down | Stays at 9+/10 |
+| Algorithm optimization | Mixed signal — Meta learns from BOTH clean (CAPI) and dirty (inferred) Purchase events | Pure signal — only clean events feed the algorithm |
+| False-positive Purchases | High — refresh `/thank-you`, hit back to `/thank-you`, refund landing all trigger inferred Purchase | None — only real verified Razorpay transactions count |
+| Refund/chargeback record | Phantom purchases stay on file | Accurate |
+
+### Recommendation: OFF
+
+**Flip the toggle to OFF.** Three reasons stack up for this funnel:
+
+1. **CAPI already provides authoritative Purchase events.** Auto-inferred Purchases are pure noise on top.
+2. **Restricted category (prenatal/health) means data quality matters more than data quantity.** Clean 14 Purchases beats noisy 28 Purchases for Meta's optimization in regulated categories.
+3. **Lost upper-funnel auto-events aren't worth the trade.** Meta inferring `ViewContent` on a Privacy Policy visit doesn't help any optimization — it just adds anonymous noise to your dataset.
+
+The only scenario where ON makes sense: you don't have CAPI set up (we do), or you run a complex multi-page funnel with events you forgot to instrument (we don't).
+
+### How to verify the change worked
+
+After flipping OFF, watch Events Manager Overview for 3-7 days:
+- The `Purchase` row should ONLY show "Conversions API" as the source (no more "Browser pixel — Estimated" or "Server + Browser").
+- Total Purchase event count should match your real Razorpay transaction count (= Pabbly sheet count).
+- EMQ for Purchase should rise (the low-quality inferred events were dragging it down).
 
 ---
 
@@ -90,7 +167,7 @@ If a stakeholder asks "why does Events Manager show 28 events when we only had 1
 
 Stay on `Purchase` optimization unless one of these happens:
 
-1. You launch a second offer from the same pixel (e.g., free webinar) that also fires `Purchase`. Then switch THIS campaign to optimize on the custom event (`sales`) to isolate paid conversions from the free signups. Note: you'd also need to manually add the custom event to AEM at the cost of demoting another event.
+1. You launch a second offer from the same pixel (e.g., free webinar) that also fires `Purchase`. Then switch THIS campaign to optimize on the custom event (`sales`) to isolate paid conversions from the free signups.
 2. Meta's diagnostics flag that `Purchase` is being inferred from non-conversion URLs (false positives). Switch to `sales` then because it's strictly server-verified.
 3. You hit 50+ `sales` events per ad set per week consistently AND want to A/B test optimization events. Run a split test (one ad set on Purchase, one on sales) for 14 days.
 
@@ -116,7 +193,7 @@ WHICH NUMBER IS REAL?
   Campaign Results column. Not Events Manager total.
 
 WHY ARE THERE TWO EVENTS FIRING?
-  Purchase = AEM/iOS coverage + Meta algorithm priors.
+  Purchase = Meta's mature ML priors + iOS attribution + safety backup.
   sales    = internal source-of-truth label.
   Both fire on the same real Razorpay transaction.
 
