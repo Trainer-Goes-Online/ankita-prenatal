@@ -12,6 +12,7 @@ import {
   CaretDown,
 } from '@phosphor-icons/react/dist/ssr';
 import PaymentLogos from '@/components/PaymentLogos';
+import { setMetaAdvancedMatching } from '@/lib/analytics';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 import type { CouponResult, CouponSuccess } from '@/lib/coupons';
 import {
@@ -700,6 +701,17 @@ export default function CheckoutForm() {
       tyParams.set('amt', '0');
       tyParams.set('cur', String(result.currency ?? CHECKOUT_CONFIG.currency));
       tyParams.set('free', '1');
+      // Set Meta Pixel Advanced Matching BEFORE the redirect so the auto-
+      // PageView that fires on /thank-you carries hashed user identity.
+      // (Server-side CAPI is intentionally skipped for free QA orders.)
+      setMetaAdvancedMatching({
+        email: fields.email,
+        phone: `${params.dialCode}${fields.phone}`,
+        firstName: fields.firstName,
+        lastName: fields.lastName,
+        city: fields.city,
+        country: countryCode,
+      });
       router.push(`${CHECKOUT_CONFIG.thankYouPath}?${tyParams.toString()}`);
     } catch (err) {
       setLoading(false);
@@ -748,6 +760,16 @@ export default function CheckoutForm() {
       if (utm.id)       tyParams.set('utm_id',       utm.id);
       if (result.amount)   tyParams.set('amt', String(result.amount));
       if (result.currency) tyParams.set('cur', String(result.currency));
+      // Set Meta Pixel Advanced Matching BEFORE the redirect so the auto-
+      // PageView that fires on /thank-you carries hashed user identity.
+      setMetaAdvancedMatching({
+        email: fields.email,
+        phone: `${dialCode}${fields.phone}`,
+        firstName: fields.firstName,
+        lastName: fields.lastName,
+        city: fields.city,
+        country: countryCode,
+      });
       router.push(`${CHECKOUT_CONFIG.thankYouPath}?${tyParams.toString()}`);
     } catch (err) {
       setLoading(false);
