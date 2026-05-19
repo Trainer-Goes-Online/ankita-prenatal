@@ -681,6 +681,7 @@ export default function CheckoutForm() {
             dialCode: params.dialCode,
           },
           utm,
+          eventSourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
         }),
       });
 
@@ -728,6 +729,7 @@ export default function CheckoutForm() {
             dialCode,
           },
           utm,
+          eventSourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
         }),
       });
 

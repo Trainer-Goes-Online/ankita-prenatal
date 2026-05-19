@@ -9,12 +9,21 @@ import { validateCoupon } from '@/lib/coupons';
 // META_CAPI_ACCESS_TOKEN are both present. If CAPI is permanently not required
 // for this client, delete this function and the block in the POST handler.
 
+function sha256(value: string): string {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
+
 async function sendMetaCapiEvent(params: {
   pixelId: string;
   accessToken: string;
   paymentId: string;
   email: string;
   phone: string;
+  firstName: string;
+  lastName: string;
+  city: string;
+  countryCode: string;
+  eventSourceUrl: string;
   fbc: string | undefined;
   fbp: string | undefined;
   clientIp: string | undefined;
@@ -22,25 +31,48 @@ async function sendMetaCapiEvent(params: {
   valueRupees: number;
   currency: string;
 }) {
-  const hashedEmail = crypto
-    .createHash('sha256')
-    .update(params.email.trim().toLowerCase())
-    .digest('hex');
+  // Email: lowercase + trim, then SHA-256.
+  const hashedEmail = sha256(params.email.trim().toLowerCase());
 
-  // Normalise phone to digits only (E.164 without +) before hashing
+  // Phone: digits only (E.164 without +) before hashing.
   const rawPhone = params.phone.replace(/\D/g, '');
-  const hashedPhone = rawPhone
-    ? crypto.createHash('sha256').update(rawPhone).digest('hex')
-    : undefined;
+  const hashedPhone = rawPhone ? sha256(rawPhone) : undefined;
 
-  const event = {
-    event_name: CHECKOUT_CONFIG.capi.eventName,
+  // Per Meta spec: fn/ln are lowercase + trim. ct is lowercase a-z only (no
+  // whitespace/punctuation). country is lowercase 2-letter ISO. Adding these
+  // raises Event Match Quality (EMQ) which directly improves attribution and
+  // therefore CPR — Meta uses them to match the conversion back to ad clicks.
+  const fn = params.firstName.trim().toLowerCase();
+  const ln = params.lastName.trim().toLowerCase();
+  const ct = params.city.trim().toLowerCase().replace(/[^a-z]/g, '');
+  const country = params.countryCode.trim().toLowerCase();
+
+  const hashedFn = fn ? sha256(fn) : undefined;
+  const hashedLn = ln ? sha256(ln) : undefined;
+  const hashedCt = ct ? sha256(ct) : undefined;
+  const hashedCountry = country ? sha256(country) : undefined;
+
+  // Shared fields across BOTH events. Standard 'Purchase' gives us AEM auto-
+  // priority for iOS attribution and Meta's mature global algorithm. Custom
+  // event (e.g. 'sales') is our internal source-of-truth label that excludes
+  // any URL-inferred or third-party 'Purchase' events. Same event_id on both
+  // means they natural-dedup against pixel events but not against each other
+  // (different event_name). Campaign Results column reads one event only.
+  const baseEvent = {
     event_time: Math.floor(Date.now() / 1000),
     event_id: params.paymentId,
     action_source: 'website',
+    // Required for action_source=website since Feb 2021; strictly enforced in
+    // restricted ad categories (health/prenatal/financial). Without it Meta
+    // discards the event from reporting & optimisation.
+    event_source_url: params.eventSourceUrl,
     user_data: {
       em: [hashedEmail],
       ...(hashedPhone && { ph: [hashedPhone] }),
+      ...(hashedFn && { fn: [hashedFn] }),
+      ...(hashedLn && { ln: [hashedLn] }),
+      ...(hashedCt && { ct: [hashedCt] }),
+      ...(hashedCountry && { country: [hashedCountry] }),
       ...(params.fbc && { fbc: params.fbc }),
       ...(params.fbp && { fbp: params.fbp }),
       ...(params.clientUserAgent && { client_user_agent: params.clientUserAgent }),
@@ -53,12 +85,17 @@ async function sendMetaCapiEvent(params: {
     },
   };
 
+  const events = [
+    { ...baseEvent, event_name: 'Purchase' },
+    { ...baseEvent, event_name: CHECKOUT_CONFIG.capi.eventName },
+  ];
+
   const res = await fetch(
     `https://graph.facebook.com/v25.0/${params.pixelId}/events?access_token=${params.accessToken}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [event] }),
+      body: JSON.stringify({ data: events }),
     }
   );
 
@@ -133,6 +170,7 @@ export async function POST(req: NextRequest) {
       utm,
       couponCode,
       freeOrderToken,
+      eventSourceUrl,
     }: {
       orderId: string;
       paymentId?: string;
@@ -141,6 +179,7 @@ export async function POST(req: NextRequest) {
       utm: UtmData;
       couponCode?: string;
       freeOrderToken?: string;
+      eventSourceUrl?: string;
     } = body;
 
     if (!orderId) {
@@ -293,6 +332,10 @@ export async function POST(req: NextRequest) {
         undefined;
       const clientUserAgent = req.headers.get('user-agent') ?? undefined;
       const fullPhone = `${customer.dialCode}${customer.phone}`;
+      // Fall back to the production checkout URL if the client didn't send one
+      // (older clients, or any caller that bypasses CheckoutForm). Meta requires
+      // event_source_url for action_source=website, so we must always send it.
+      const resolvedEventSourceUrl = eventSourceUrl || 'https://prenatal.bodyworx.in/checkout';
       try {
         const capiResult = await sendMetaCapiEvent({
           pixelId: metaPixelId,
@@ -300,6 +343,11 @@ export async function POST(req: NextRequest) {
           paymentId: resolvedPaymentId,
           email: customer.email,
           phone: fullPhone,
+          firstName: customer.firstName,
+          lastName: customer.lastName,
+          city: customer.city,
+          countryCode: customer.countryCode,
+          eventSourceUrl: resolvedEventSourceUrl,
           fbc,
           fbp,
           clientIp,
