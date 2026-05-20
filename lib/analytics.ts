@@ -39,14 +39,51 @@ export function trackPurchaseComplete(params: {
   value: number;
   currency?: string;
 }) {
-  // GA4 only. The Meta conversion is reported server-side as the custom 'sales'
-  // event via CAPI in /api/razorpay/verify-payment - more accurate than the
-  // browser pixel (which is blocked by ad blockers / iOS tracking prevention).
+  // GA4 dataLayer push.
   pushDataLayer('purchase_complete', {
     transaction_id: params.paymentId,
     value: params.value,
     currency: params.currency ?? 'INR',
   });
+}
+
+/**
+ * Fire the Meta Pixel standard 'Purchase' event from the browser, paired with
+ * the server-side CAPI Purchase event of the same event_id for deduplication.
+ *
+ * Why we fire from BOTH sides:
+ * - Server CAPI is the authoritative source (not blocked by ad blockers / iOS
+ *   tracking prevention) — guarantees we count every paid conversion.
+ * - Browser pixel pairs with CAPI so Meta can dedupe by event_id. Without a
+ *   browser pair, Meta's dedup coverage drops to 0% and (worse) Meta's
+ *   Automatic Event Detection synthesises uncontrolled Purchase events from
+ *   page metadata that have NO event_id — those can't be deduped and inflate
+ *   the reported count (e.g. 16 real sales → 49 reported Purchases).
+ *
+ * Per Meta dedup spec (https://developers.facebook.com/documentation/ads-commerce/conversions-api/deduplicate-pixel-and-server-events):
+ *   "Browser eventID must equal server event_id, and event_name must match
+ *   exactly. Both events must arrive within a 48-hour window."
+ *
+ * Call this AFTER setMetaAdvancedMatching so the Purchase event inherits the
+ * hashed user identity (em/ph/fn/ln/ct/country) for high Event Match Quality.
+ */
+export function trackPurchasePixel(params: {
+  paymentId: string;        // used as eventID — must match server event_id
+  value: number;            // rupees (or paise/100), same value as CAPI
+  currency?: string;        // ISO 4217, e.g. 'INR'
+  contentName?: string;     // display name in Events Manager
+}) {
+  if (typeof window === 'undefined' || !window.fbq) return;
+  window.fbq(
+    'track',
+    'Purchase',
+    {
+      value: params.value,
+      currency: params.currency ?? 'INR',
+      content_name: params.contentName ?? 'Prenatal Challenge',
+    },
+    { eventID: params.paymentId },
+  );
 }
 
 // Mirror of the literal in app/layout.tsx so this helper can re-init the pixel

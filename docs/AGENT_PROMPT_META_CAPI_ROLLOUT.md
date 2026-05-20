@@ -39,13 +39,18 @@ Wait for my approval before editing.
 STEP 4 — Implement
 Once I approve, implement the changes following the guide EXACTLY. Specifically:
 - Fire BOTH `Purchase` (standard) AND the custom event in a single HTTP POST to Meta with a 2-element `data` array
-- Both events share `event_id`, `event_source_url`, `user_data`, `custom_data`
+- Both events share `event_id` (the transaction ID), `event_source_url`, `user_data`, `custom_data`
 - All 6 hashed user_data fields (em, ph, fn, ln, ct, country) using the normalization rules in the guide
 - 4 server-context fields (fbc, fbp, client_ip_address, client_user_agent) sent RAW (unhashed)
 - Client sends `window.location.href` as `eventSourceUrl` in the verify-payment POST body
 - Server uses request body's eventSourceUrl, falls back to a hardcoded production URL
 - CAPI block is guarded by the equivalent of `!isFreeOrder`
-- Client-side pixel fires ONLY `PageView` — remove any `fbq('track', 'Purchase'|'InitiateCheckout'|...)` calls if they exist
+- Client-side pixel fires `PageView` in the root layout, AND fires a paired browser-side `Purchase` from the checkout success handler with `eventID = transactionID` — same id used as `event_id` in the server CAPI Purchase call, so Meta dedupes them as one. The browser Purchase call MUST be:
+  - Wrapped in the same `!isFreeOrder` guard (symmetric with the server)
+  - Called AFTER `setMetaAdvancedMatching(...)` and BEFORE `router.push` so it inherits hashed identity for high EMQ
+  - Use the helper `trackPurchasePixel({ paymentId, value, currency, contentName })` in `lib/analytics.ts` — mirror the helper from the reference repo
+- The custom event (`sales`/`leads`/`signup`) is NEVER fired from the browser — it's server-only by design. Do not add `fbq('track', '<custom>', ...)`.
+- Tell the user (in the final report) to turn OFF "Track events automatically without code" in Events Manager → Dataset settings for this pixel. Without that toggle off, Meta synthesises uncontrolled Purchase events from page metadata that have no eventID and cannot be deduped.
 
 STEP 5 — Verify and report
 After implementation:
@@ -69,12 +74,15 @@ After implementation:
 ## Verification checklist for the user
 
 [ ] Type-check / lint passes
-[ ] Run a test purchase locally; confirm in dev console: events array sent with 2 entries
-[ ] In Events Manager Test Events: both "Purchase" and "<custom_event_name>" appear
-[ ] EMQ shows 9+/10 on both events
-[ ] event_source_url field is populated in the event preview
+[ ] Events Manager → Dataset settings: "Track events automatically without code" is OFF
+[ ] Run a test purchase locally; confirm in dev console: server events array sent with 2 entries; browser fbq('track','Purchase') fired with eventID matching server event_id
+[ ] In Events Manager Test Events: server "Purchase", server "<custom_event_name>", AND browser "Purchase" all appear
+[ ] Server "Purchase" and browser "Purchase" rows share the same eventID and show a "Deduplicated" badge
+[ ] EMQ shows 9+/10 on all three rows
+[ ] event_source_url field is populated in the server event preview
 [ ] No more "event_source_url missing" diagnostic warning after 72h
-[ ] Free/test orders do NOT fire CAPI events
+[ ] Free/test orders do NOT fire CAPI events OR the browser Purchase event
+[ ] 24–72h later, Diagnostics shows Purchase dedup coverage rate ≥ 75%
 
 ## Notes / decisions
 <List any project-specific deviations from the standard pattern, including:
@@ -94,8 +102,11 @@ After implementation:
 | Hashed PII fields sent | em, ph, fn, ln, ct, country | <fields> |
 | Server-context fields | fbc, fbp, IP, UA | <fields> |
 | event_source_url source | window.location.href from client | <source> |
-| Free-order guard | !isFreeOrder | <guard> |
-| Client pixel events | PageView only | <events> |
+| Free-order guard (server) | !isFreeOrder | <guard> |
+| Free-order guard (browser Purchase) | Symmetric to server | <guard> |
+| Client pixel events | PageView (layout) + Purchase (success path, eventID = transactionID) | <events> |
+| Browser ↔ server dedup key | eventID === event_id === transactionID | <key> |
+| Auto Event Detection toggle | OFF (user must toggle in Events Manager) | <state> |
 
 STEP 6 — Double-check
 Before declaring done, re-read your final summary and confirm:

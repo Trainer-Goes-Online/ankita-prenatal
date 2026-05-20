@@ -1,6 +1,9 @@
 # Meta Ads Team — Post-CAPI-Upgrade Playbook
 
-What to do in Meta Events Manager and Ads Manager after the engineering team ships the dual-event CAPI change (Purchase + sales, both with full EMQ fields + event_source_url).
+What to do in Meta Events Manager and Ads Manager after the engineering team ships:
+1. The dual-event CAPI change (server `Purchase` + server `sales`, both with full EMQ fields + event_source_url)
+2. The browser-side `Purchase` event paired with the server CAPI Purchase via matching `eventID` (for proper deduplication)
+3. The "Track events automatically without code" toggle turned OFF in Events Manager
 
 Pixel: **Ankita pixel 2 (1364192652209120)** · Domain: **prenatal.bodyworx.in**
 
@@ -12,17 +15,22 @@ Pixel: **Ankita pixel 2 (1364192652209120)** · Domain: **prenatal.bodyworx.in**
    - Copy the test event code from the URL bar (e.g. `TEST12345`).
    - Hand it to engineering — they'll temporarily add it to the next CAPI call (or run a test purchase with `tgotest2025` coupon disabled).
    - Run one real ₹297 transaction through the live funnel.
-   - In Test Events, you should see **two events arrive within 30 seconds**:
-     - `Purchase` (server, EMQ should show 9+/10)
-     - `sales` (server, EMQ should show 9+/10)
-   - Each event card should show: `event_source_url: https://prenatal.bodyworx.in/...`, plus matching parameters: email, phone, name, city, country, fbc, fbp, IP, UA.
+   - In Test Events, you should see **three rows arrive within 30 seconds**:
+     - `Purchase` from **Browser (Pixel)** — EMQ 9+/10, with eventID populated
+     - `Purchase` from **Server (Conversions API)** — EMQ 9+/10, with event_id matching the browser eventID, and `event_source_url: https://prenatal.bodyworx.in/...`
+     - `sales` from **Server (Conversions API)** — EMQ 9+/10
+   - The two `Purchase` rows should show a green **"Deduplicated"** badge or annotation, confirming Meta has matched them by event_id.
+   - Each server event card should show matching parameters: email, phone, name, city, country, fbc, fbp, IP, UA.
 
 2. **Events Manager → Overview tab**
-   - Confirm the `Purchase` row now shows **source: "Conversions API"** or "Server + Browser" (not just "Meta Pixel — Estimated").
-   - Confirm `sales` row shows source: "Conversions API".
+   - Confirm the `Purchase` row shows **source: "Multiple"** (Meta Pixel + Conversions API) — that's correct now, and the deduplicated count is what gets reported.
+   - Confirm `sales` row shows source: "Conversions API" only.
+   - The Purchase count and the `sales` count should be **within 1–2 of each other** on any given day (small lag from dedup window). If they're materially different (e.g. 49 vs 16), see "When the numbers diverge" below.
 
 3. **Events Manager → Diagnostics tab**
    - The "Some Conversions API events will be blocked in 60 days" warning should disappear within ~72 hours of the first event firing with `event_source_url`. Don't panic if it lingers for 1-2 days — Meta updates diagnostics in batches.
+   - The "Fix price information for web Webinar/Purchase events" warning (if previously present) should age out as new events arrive with dynamic per-transaction value.
+   - The "Improve event ID coverage / improve deduplication for this event" warning should drop from active errors within 72h once we have ≥75% dedup coverage. Tracking: Diagnostics → Purchase → "Event deduplication" tab → "Total event coverage rate" should climb from 0% toward 100%.
    - The "Confirm domain that belong to you" warning should remain cleared (you already added `prenatal.bodyworx.in` to allow list).
 
 If anything in steps 1-3 fails, ping engineering before touching campaign settings.
@@ -53,6 +61,8 @@ By day 7, the cleaner signal should be fully baked in. Check:
 | EMQ for Purchase event | Events Manager → Purchase row | **9+/10** (was likely 3-5/10 before) |
 | EMQ for sales event | Events Manager → sales row | **9+/10** |
 | Match rate | Events Manager → Diagnostics → Event Match Quality | 85-95% (was ~40-60% with inferred events) |
+| Purchase dedup coverage rate | Events Manager → Diagnostics → Purchase → Event deduplication | **≥75%** (was 0% before browser Purchase paired) |
+| `Purchase` count ≈ `sales` count | Events Manager → Overview, daily | Within 1–2 events of each other. If `Purchase` is materially higher (e.g. 3× the `sales` count), browser Purchase isn't deduping — see "When the numbers diverge". |
 
 Document the before/after CPR. This is the single biggest improvement you can make to ad performance on Meta — without changing creative or audience.
 
@@ -175,6 +185,42 @@ None of these apply today.
 
 ---
 
+## Deduplication — what it is, why we set it up, what to expect
+
+### The pattern (one paragraph)
+
+For every real purchase, **two `Purchase` events arrive at Meta**: one from the browser pixel (fired client-side from the checkout success handler) and one from the Conversions API (fired server-side after Razorpay confirms payment). Both events carry the **same eventID** — the Razorpay payment ID. Meta sees the matching IDs within its 48-hour dedup window and collapses the two into a single counted Purchase. We get the resilience of CAPI (not blocked by ad blockers / iOS tracking prevention) **plus** the optimization signal of a browser-side standard event — without double-counting.
+
+### Why we added this (history)
+
+In the first version of the integration, only the server CAPI Purchase event fired. The browser pixel only fired PageView. This looked clean in theory but failed in practice: Meta's "Track events automatically without code" feature was synthesising its own Purchase events from page metadata (the `/thank-you` URL, the "Pay ₹297" button text, etc.). Those synthetic browser events had no eventID and could not be deduplicated against CAPI. Result: 16 real sales reported as 49 Purchase events.
+
+Fix shipped:
+1. Turned OFF "Track events automatically without code" (stops Meta from inferring).
+2. Added an **explicit** browser `Purchase` event with `eventID = razorpay_payment_id` (gives Meta a clean dedup pair).
+
+### When the numbers diverge (`Purchase` count >> `sales` count)
+
+If you ever see Events Manager Overview showing the `Purchase` row at 2×, 3×, or more of the `sales` row, dedup is broken. In order of likelihood:
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Purchase ≈ 3× sales, "Track events automatically without code" is ON | Meta is inferring phantom Purchase events with no eventID | Events Manager → Dataset settings → Event setup → toggle OFF |
+| Purchase ≈ 2× sales, dedup coverage rate stuck at 0% | Browser eventID and server event_id don't match (typo, different field, or only one side firing) | Ping engineering — share a sample payment_id and ask them to confirm both events fire that exact string |
+| Purchase only counts CAPI, dedup coverage 0%, sales accurate | Browser Purchase isn't firing at all (ad blocker, JS error before the call) | Test Events should show only the server row; ad-blocker browsers are expected to miss browser Purchase but CAPI still counts → expect ~75% coverage, not 100% |
+| Purchase < sales | Server CAPI not firing for some orders (network failure, missing env var) | Check Vercel logs for `[verify-payment] Meta CAPI error:` — escalate to engineering |
+
+A dedup coverage rate of **75–100%** is the healthy zone. 100% is unrealistic in practice because some users have ad blockers, NoScript, or iOS tracking prevention — those users send only the server CAPI event, which is exactly the failover we designed for.
+
+### Will this break? (Other clients to watch)
+
+The agency runs 100+ pixels. **Every pixel that has been live ~3+ weeks with steady traffic AND has "Track events automatically without code" still ON will eventually show the same divergence.** Don't wait for the warning — proactively check each client pixel's settings:
+- Events Manager → Dataset settings → Event setup → "Track events automatically without code" → **OFF**.
+
+If a client funnel is sending CAPI Purchase but doesn't have the browser-side Purchase pair yet (older repos), engineering should backfill the dedup helper using `AGENT_PROMPT_META_CAPI_ROLLOUT.md`. It's a 5-line code change in the checkout success handler.
+
+---
+
 ## What to do if the diagnostic warning doesn't clear after 72 hours
 
 1. Re-check Test Events tab — does the next Purchase event show `event_source_url` populated?
@@ -192,16 +238,28 @@ WHICH EVENT TO OPTIMIZE ON?
 WHICH NUMBER IS REAL?
   Campaign Results column. Not Events Manager total.
 
-WHY ARE THERE TWO EVENTS FIRING?
+WHY ARE THERE THREE ROWS FIRING IN TEST EVENTS?
+  Server Purchase (CAPI) + Browser Purchase (Pixel) → DEDUPED to 1 Purchase.
+  Server sales (CAPI, custom)                       → counted once.
+  All three fire on the same real Razorpay transaction; same eventID on
+  the two Purchases collapses them via Meta's 48h dedup.
+
+WHY ARE PURCHASE & SALES TWO EVENTS, NOT ONE?
   Purchase = Meta's mature ML priors + iOS attribution + safety backup.
-  sales    = internal source-of-truth label.
-  Both fire on the same real Razorpay transaction.
+  sales    = internal source-of-truth label (custom name, server-only).
+  Different event_name = no dedup between them = both stay countable separately.
+
+WHEN PURCHASE COUNT >> SALES COUNT, CHECK:
+  1. Events Manager → "Track events automatically without code" = OFF?
+  2. Engineering: is browser fbq('track','Purchase', {...}, {eventID}) firing
+     with the EXACT same string as the server event_id (= razorpay_payment_id)?
+  See "When the numbers diverge" section above.
 
 WHERE'S THE MONEY NUMBER?
   Pabbly Google Sheet. Always.
 
 WHO TO PING IF CPR DOUBLES?
-  Engineering first (check CAPI is firing).
+  Engineering first (check CAPI is firing + dedup coverage rate).
   Media buyer second (check creative/audience).
   Don't pause campaigns under 48h of confusion.
 ```

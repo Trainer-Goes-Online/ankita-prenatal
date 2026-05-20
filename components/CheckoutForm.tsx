@@ -12,7 +12,7 @@ import {
   CaretDown,
 } from '@phosphor-icons/react/dist/ssr';
 import PaymentLogos from '@/components/PaymentLogos';
-import { setMetaAdvancedMatching } from '@/lib/analytics';
+import { setMetaAdvancedMatching, trackPurchasePixel } from '@/lib/analytics';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 import type { CouponResult, CouponSuccess } from '@/lib/coupons';
 import {
@@ -760,8 +760,10 @@ export default function CheckoutForm() {
       if (utm.id)       tyParams.set('utm_id',       utm.id);
       if (result.amount)   tyParams.set('amt', String(result.amount));
       if (result.currency) tyParams.set('cur', String(result.currency));
-      // Set Meta Pixel Advanced Matching BEFORE the redirect so the auto-
-      // PageView that fires on /thank-you carries hashed user identity.
+      // Set Meta Pixel Advanced Matching BEFORE firing Purchase so the
+      // Purchase event inherits hashed em/ph/fn/ln/ct/country and reaches
+      // 9.x/10 Event Match Quality. MAM must come first — fbq events that
+      // fire AFTER the init-with-matching call pick up the matching object.
       setMetaAdvancedMatching({
         email: fields.email,
         phone: `${dialCode}${fields.phone}`,
@@ -769,6 +771,16 @@ export default function CheckoutForm() {
         lastName: fields.lastName,
         city: fields.city,
         country: countryCode,
+      });
+      // Browser-side standard 'Purchase' paired with the server CAPI
+      // Purchase event of the same event_id for Meta's dedup window (48h).
+      // Without this, Meta's Auto Event Detection synthesises uncontrolled
+      // Purchase events with no eventID, inflating reported counts.
+      trackPurchasePixel({
+        paymentId: response.razorpay_payment_id,
+        value: result.amount ?? CHECKOUT_CONFIG.amountRupeesNumeric,
+        currency: result.currency ?? CHECKOUT_CONFIG.currency,
+        contentName: CHECKOUT_CONFIG.challenge.brandName,
       });
       router.push(`${CHECKOUT_CONFIG.thankYouPath}?${tyParams.toString()}`);
     } catch (err) {

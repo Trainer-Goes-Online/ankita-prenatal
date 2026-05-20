@@ -37,6 +37,8 @@ Call `window.fbq('init', PIXEL_ID, matchingObject)` passing RAW NORMALIZED value
 STEP 3 - CALL THE HELPER right before EVERY redirect to the success page
 In each form-submit success path (paid + free/coupon + any other), call `setMetaAdvancedMatching({...form fields...})` IMMEDIATELY BEFORE the `router.push` (or `window.location.assign`) to the thank-you/success page. Not on the success page itself - Meta's auto-PageView for the new URL fires immediately on route change, so MAM must be set BEFORE the redirect.
 
+If this project also fires a browser-side `Purchase` event (the CAPI dedup pattern from META_CAPI_OPTIMIZATION_GUIDE.md — recommended), `setMetaAdvancedMatching` MUST be called BEFORE `fbq('track', 'Purchase', ...)` so the Purchase event inherits the hashed identity on the browser side too and lands at 9+/10 EMQ. Correct order in the paid success path: `setMetaAdvancedMatching(...) → trackPurchasePixel(...) → router.push(...)`.
+
 STEP 4 - TYPE-CHECK, THEN OUTPUT THIS SIDE-BY-SIDE FOR ME TO VERIFY
 
 | Aspect                          | Reference (Prenatal repo)                          | This project |
