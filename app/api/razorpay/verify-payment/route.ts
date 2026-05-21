@@ -32,11 +32,19 @@ async function sendMetaCapiEvent(params: {
   currency: string;
 }) {
   // Email: lowercase + trim, then SHA-256.
-  const hashedEmail = sha256(params.email.trim().toLowerCase());
+  const normalisedEmail = params.email.trim().toLowerCase();
+  const hashedEmail = sha256(normalisedEmail);
 
   // Phone: digits only (E.164 without +) before hashing.
   const rawPhone = params.phone.replace(/\D/g, '');
   const hashedPhone = rawPhone ? sha256(rawPhone) : undefined;
+
+  // external_id: a stable-per-customer-per-transaction identifier Meta uses
+  // as an additional matching signal (+~11% EMQ per Meta's recommendations
+  // panel). Composed of normalised email + payment id so it's both
+  // user-stable across this transaction AND unique enough to act as a
+  // dedup/attribution cross-reference. SHA-256 so no PII in the value.
+  const externalId = sha256(`${normalisedEmail}|${params.paymentId}`);
 
   // Per Meta spec: fn/ln are lowercase + trim. ct is lowercase a-z only (no
   // whitespace/punctuation). country is lowercase 2-letter ISO. Adding these
@@ -73,6 +81,7 @@ async function sendMetaCapiEvent(params: {
       ...(hashedLn && { ln: [hashedLn] }),
       ...(hashedCt && { ct: [hashedCt] }),
       ...(hashedCountry && { country: [hashedCountry] }),
+      external_id: [externalId],
       ...(params.fbc && { fbc: params.fbc }),
       ...(params.fbp && { fbp: params.fbp }),
       ...(params.clientUserAgent && { client_user_agent: params.clientUserAgent }),

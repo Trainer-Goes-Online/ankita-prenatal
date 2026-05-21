@@ -91,52 +91,128 @@ export function trackPurchasePixel(params: {
 // the client bundle - so duplicating as a literal is fine.
 const META_PIXEL_ID = '1364192652209120';
 
+// First-party cookie that persists hashed MAM values across pages and sessions
+// so every PageView (not just the one after form-fill) inherits user identity.
+// 30-day TTL matches our UTM attribution window. Same-origin-only, SameSite=Lax.
+// Cookie is also read by the inline pixel script in app/layout.tsx BEFORE the
+// first PageView fires, so even hard-refresh page loads get identified.
+const MAM_COOKIE_NAME = 'bw_mam';
+const MAM_COOKIE_TTL_SECONDS = 30 * 24 * 60 * 60;
+
 /**
- * Re-initialise the Meta Pixel with Manual Advanced Matching (MAM) once we
- * know the buyer's identity. Pass raw form values - Meta's pixel library
- * SHA-256 hashes them client-side before transmitting, so PII never leaves
- * the browser unhashed.
- *
- * Call this on the /checkout success path RIGHT BEFORE the redirect to
- * /thank-you, so the auto-PageView that fires on /thank-you (via Meta's SPA
- * hook into pushState) carries the matching signals. Browser PageView events
- * with MAM raise retargeting audience precision and improve cross-device
- * attribution on top of what server-side CAPI already provides.
- *
- * Per Meta spec normalisation (applied here so the caller passes raw form
- * values): em/fn/ln are lowercased + trimmed; ph is digits-only with country
- * code (no +); ct is lowercase a-z only (no spaces or punctuation); country
- * is lowercase 2-letter ISO. Meta hashes the result with SHA-256.
+ * SHA-256 hex hasher using the Web Crypto API. Available in all modern browsers
+ * over HTTPS (and on http://localhost). We pre-hash so the cookie never stores
+ * plain PII - Meta's pixel detects 64-char hex strings as already-hashed and
+ * uses them verbatim, no double-hashing.
  */
-export function setMetaAdvancedMatching(data: {
+async function sha256Hex(value: string): Promise<string> {
+  if (typeof crypto === 'undefined' || !crypto.subtle) return value;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Apply Meta-spec normalisation, hash each field with SHA-256, and return the
+ * matching object ready to hand to fbq init / store in the cookie.
+ */
+async function buildHashedMatching(data: {
   email?: string;
-  phone?: string;       // raw with or without country code/dial code
+  phone?: string;
   firstName?: string;
   lastName?: string;
   city?: string;
-  country?: string;     // 2-letter ISO; case-insensitive
-}) {
-  if (typeof window === 'undefined' || !window.fbq) return;
-  const matching: Record<string, string> = {};
-  if (data.email) matching.em = data.email.trim().toLowerCase();
+  country?: string;
+}): Promise<Record<string, string>> {
+  const normalised: Record<string, string | undefined> = {};
+  if (data.email) normalised.em = data.email.trim().toLowerCase();
   if (data.phone) {
     const digits = data.phone.replace(/\D/g, '');
-    if (digits) matching.ph = digits;
+    if (digits) normalised.ph = digits;
   }
-  if (data.firstName) matching.fn = data.firstName.trim().toLowerCase();
-  if (data.lastName) matching.ln = data.lastName.trim().toLowerCase();
+  if (data.firstName) normalised.fn = data.firstName.trim().toLowerCase();
+  if (data.lastName) normalised.ln = data.lastName.trim().toLowerCase();
   if (data.city) {
     const ct = data.city.trim().toLowerCase().replace(/[^a-z]/g, '');
-    if (ct) matching.ct = ct;
+    if (ct) normalised.ct = ct;
   }
   if (data.country) {
     const country = data.country.trim().toLowerCase();
-    if (country) matching.country = country;
+    if (country) normalised.country = country;
   }
+  const keys = Object.keys(normalised) as Array<keyof typeof normalised>;
+  const hashes = await Promise.all(keys.map((k) => sha256Hex(normalised[k] as string)));
+  const matching: Record<string, string> = {};
+  keys.forEach((k, i) => { matching[k as string] = hashes[i]; });
+  return matching;
+}
+
+function writeMamCookie(matching: Record<string, string>) {
+  if (typeof document === 'undefined') return;
+  if (Object.keys(matching).length === 0) return;
+  const value = encodeURIComponent(JSON.stringify(matching));
+  document.cookie = `${MAM_COOKIE_NAME}=${value}; Path=/; Max-Age=${MAM_COOKIE_TTL_SECONDS}; SameSite=Lax`;
+}
+
+export function readMamCookie(): Record<string, string> | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${MAM_COOKIE_NAME}=([^;]+)`));
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(match[1]));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Re-initialise the Meta Pixel with Manual Advanced Matching (MAM). Pass raw
+ * form values - this helper SHA-256 hashes them client-side via Web Crypto
+ * (Meta's pixel sees pre-hashed values and uses them verbatim), then ALSO
+ * persists the hashed values to a first-party cookie so every subsequent
+ * PageView on any page inherits the matching object.
+ *
+ * Called in three places:
+ *   1. On form completion (CheckoutForm useEffect) - earliest possible moment
+ *      we know identity, so /checkout PageViews from that point get identified.
+ *   2. On payment success (CheckoutForm handlePaymentSuccess) - belt-and-
+ *      braces with latest field values, in case the user edited fields after
+ *      step 1.
+ *   3. On /thank-you mount (backup) - re-applies from the persisted cookie if
+ *      anything in step 1/2 failed.
+ *
+ * Per Meta spec: em/fn/ln are lowercased + trimmed; ph is digits-only (no +);
+ * ct is lowercase a-z only (no spaces/punctuation); country is lowercase
+ * 2-letter ISO. Output values are SHA-256 hex strings.
+ */
+export async function setMetaAdvancedMatching(data: {
+  email?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  country?: string;
+}) {
+  if (typeof window === 'undefined' || !window.fbq) return;
+  const matching = await buildHashedMatching(data);
   if (Object.keys(matching).length === 0) return;
   // Calling fbq('init', ID, advancedMatchingObject) a second time updates the
   // matching object on the existing pixel instance. All subsequent events on
   // this and following pages (including Meta's auto-PageView on SPA route
   // changes) inherit these signals.
+  window.fbq('init', META_PIXEL_ID, matching);
+  writeMamCookie(matching);
+}
+
+/**
+ * Re-fire MAM from the persisted cookie. Used on /thank-you mount as a safety
+ * net AND on any cold page load that the inline script in layout.tsx doesn't
+ * cover (e.g. very fast SPA navigations where the layout script raced the
+ * first PageView).
+ */
+export function reapplyMamFromCookie() {
+  if (typeof window === 'undefined' || !window.fbq) return;
+  const matching = readMamCookie();
+  if (!matching || Object.keys(matching).length === 0) return;
   window.fbq('init', META_PIXEL_ID, matching);
 }

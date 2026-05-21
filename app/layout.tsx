@@ -153,11 +153,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}</Script>
         )}
 
-        {/* ── Meta Pixel base - init + PageView. Loads fbq globally so the
-            Meta Pixel Helper browser extension detects it, and so the existing
-            window.fbq('track', ...) calls in lib/analytics.ts (InitiateCheckout,
-            Purchase) actually fire. Server-side custom 'sales' event lives in
-            /api/razorpay/verify-payment via CAPI. ── */}
+        {/* ── Meta Pixel base - init + Manual Advanced Matching (MAM) +
+            PageView. Loads fbq globally so the Meta Pixel Helper extension
+            detects it. Reads the bw_mam first-party cookie BEFORE PageView
+            fires - if the user has previously filled the checkout form, the
+            cookie contains pre-hashed em/ph/fn/ln/ct/country and the
+            PageView event inherits those signals (EMQ ~8 vs ~6 anonymous).
+            For first-time anonymous visitors with no cookie, PageView fires
+            with just the auto fbp/fbc/IP/UA signals (EMQ ~6). Server-side
+            'sales' custom event lives in /api/razorpay/verify-payment. ── */}
         {META_PIXEL_ID && (
           <>
             <Script id="meta-pixel-init" strategy="afterInteractive">{`
@@ -170,6 +174,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
               fbq('init', '${META_PIXEL_ID}');
+              try {
+                var m = document.cookie.match(/(?:^|;\\s*)bw_mam=([^;]+)/);
+                if (m) {
+                  var mam = JSON.parse(decodeURIComponent(m[1]));
+                  if (mam && typeof mam === 'object' && Object.keys(mam).length) {
+                    fbq('init', '${META_PIXEL_ID}', mam);
+                  }
+                }
+              } catch (e) {}
               fbq('track', 'PageView');
             `}</Script>
             <noscript>

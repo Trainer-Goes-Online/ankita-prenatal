@@ -485,6 +485,36 @@ export default function CheckoutForm() {
     writeUtmCookie(urlUtm);
   }, []);
 
+  // Fire MAM as soon as the form is fully filled + valid - independent of
+  // whether the user pays. This identifies any subsequent pixel events on
+  // /checkout AND persists hashed identity to the bw_mam cookie so future
+  // PageViews on every page (including /thank-you and any return visits)
+  // inherit user_data. Debounced 500ms so we don't spam fbq while the user
+  // is still typing.
+  useEffect(() => {
+    const allFilled =
+      fields.firstName.trim() &&
+      fields.lastName.trim() &&
+      fields.email.trim() &&
+      fields.city.trim() &&
+      fields.phone.trim();
+    if (!allFilled) return;
+    const currentErrors = validateFields(fields, countryCode);
+    if (Object.keys(currentErrors).length > 0) return;
+    const selected = COUNTRIES.find((c) => c.code === countryCode) ?? COUNTRIES[0];
+    const timer = setTimeout(() => {
+      void setMetaAdvancedMatching({
+        email: fields.email,
+        phone: `${selected.dial}${fields.phone}`,
+        firstName: fields.firstName,
+        lastName: fields.lastName,
+        city: fields.city,
+        country: countryCode,
+      });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [fields, countryCode]);
+
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -704,7 +734,7 @@ export default function CheckoutForm() {
       // Set Meta Pixel Advanced Matching BEFORE the redirect so the auto-
       // PageView that fires on /thank-you carries hashed user identity.
       // (Server-side CAPI is intentionally skipped for free QA orders.)
-      setMetaAdvancedMatching({
+      await setMetaAdvancedMatching({
         email: fields.email,
         phone: `${params.dialCode}${fields.phone}`,
         firstName: fields.firstName,
@@ -762,9 +792,11 @@ export default function CheckoutForm() {
       if (result.currency) tyParams.set('cur', String(result.currency));
       // Set Meta Pixel Advanced Matching BEFORE firing Purchase so the
       // Purchase event inherits hashed em/ph/fn/ln/ct/country and reaches
-      // 9.x/10 Event Match Quality. MAM must come first — fbq events that
+      // 9.x/10 Event Match Quality. MAM must come first - fbq events that
       // fire AFTER the init-with-matching call pick up the matching object.
-      setMetaAdvancedMatching({
+      // await: the helper is async (SHA-256 via Web Crypto); the Purchase
+      // fbq call below depends on the matching object being set first.
+      await setMetaAdvancedMatching({
         email: fields.email,
         phone: `${dialCode}${fields.phone}`,
         firstName: fields.firstName,

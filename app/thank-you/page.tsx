@@ -20,7 +20,7 @@ import {
   WhatsappLogo,
   Warning,
 } from '@phosphor-icons/react/dist/ssr';
-import { trackPurchaseComplete } from '@/lib/analytics';
+import { reapplyMamFromCookie, trackPurchaseComplete } from '@/lib/analytics';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 
 // The WhatsApp community invite rotates every ~2 weeks, so it lives in an env
@@ -52,6 +52,12 @@ function ThankYouContent() {
   useEffect(() => {
     if (firedRef.current) return;
     firedRef.current = true;
+    // Backup safety net: re-apply MAM from the persisted bw_mam cookie in case
+    // the inline pixel script in app/layout.tsx raced the route change OR the
+    // form-fill MAM call didn't complete before redirect. fbq init is
+    // idempotent so calling it again with the same matching object is a no-op
+    // if it was already applied.
+    reapplyMamFromCookie();
     trackPurchaseComplete({
       paymentId: `landing_${Date.now()}`,
       value: amount,
