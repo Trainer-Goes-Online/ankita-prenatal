@@ -143,6 +143,19 @@ async function buildHashedMatching(data: {
   const hashes = await Promise.all(keys.map((k) => sha256Hex(normalised[k] as string)));
   const matching: Record<string, string> = {};
   keys.forEach((k, i) => { matching[k as string] = hashes[i]; });
+
+  // external_id: stable per-user identifier per Meta's spec
+  // (developers.facebook.com → External ID). Must be CONSISTENT across
+  // browser Pixel and CAPI for the same user. We derive it as sha256 of the
+  // normalised email - identical value across every channel and session for
+  // a given user. Meta caches the external_id → Facebook user association
+  // after the first match, so future events carrying just external_id (e.g.
+  // anonymous return-visit PageViews) get re-matched without other PII.
+  // Sending external_id is recommended even when em is also present - they
+  // are matched via different internal indices and reinforce each other.
+  if (matching.em) {
+    matching.external_id = matching.em;
+  }
   return matching;
 }
 

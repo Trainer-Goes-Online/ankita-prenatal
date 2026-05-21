@@ -39,12 +39,16 @@ async function sendMetaCapiEvent(params: {
   const rawPhone = params.phone.replace(/\D/g, '');
   const hashedPhone = rawPhone ? sha256(rawPhone) : undefined;
 
-  // external_id: a stable-per-customer-per-transaction identifier Meta uses
-  // as an additional matching signal (+~11% EMQ per Meta's recommendations
-  // panel). Composed of normalised email + payment id so it's both
-  // user-stable across this transaction AND unique enough to act as a
-  // dedup/attribution cross-reference. SHA-256 so no PII in the value.
-  const externalId = sha256(`${normalisedEmail}|${params.paymentId}`);
+  // external_id: stable per-USER identifier (not per-transaction) per Meta's
+  // spec (developers.facebook.com → External ID). Must be CONSISTENT across
+  // browser Pixel and CAPI for the same user - browser MAM init in
+  // lib/analytics.ts buildHashedMatching computes the same value. Meta caches
+  // the external_id → Facebook user mapping after the first match, so future
+  // events from the same user (including anonymous return-visit PageViews)
+  // can be re-matched without other PII. Using sha256(normalised email)
+  // means the same user always produces the same external_id regardless of
+  // session, channel, or how many transactions they make.
+  const externalId = sha256(normalisedEmail);
 
   // Per Meta spec: fn/ln are lowercase + trim. ct is lowercase a-z only (no
   // whitespace/punctuation). country is lowercase 2-letter ISO. Adding these
