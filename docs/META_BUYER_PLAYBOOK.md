@@ -6,6 +6,26 @@ Pair this with `META_TRACKING_AGENT_GUIDE.md` (the engineering side). The two do
 
 ---
 
+## Section 0 — ⚠️ Health & Wellness restriction (READ FIRST — applies to all our funnels)
+
+Our datasets are categorized **"Health and wellness condition"** in Events Manager. Meta's data-source-category restriction blocks mid/lower-funnel **standard** events (Purchase / AddToCart / InitiateCheckout / Subscribe / Lead) **by name** — first a "core setup" (URL path + custom params stripped), then full standard-event blocking on a ~17-day clock. A self-categorization appeal for a genuine prenatal/health funnel **will be rejected**.
+
+**What this changes for you operationally:**
+
+| Topic | Old guidance (rest of this doc) | **Current reality** |
+|---|---|---|
+| Events fired | `Purchase` + `<custom>` from CAPI | **`<custom>` only** (e.g. `sales`) — no `Purchase` at all |
+| Optimize campaign on | `Purchase` | **the custom event directly** (no Custom Conversion needed) |
+| Browser-side Purchase / dedup escalation (Section 6.3, 7) | available | **N/A — do not request it.** Any browser pair must be the custom event, never `Purchase` |
+| Results column reads | `Purchase` | **the custom event** |
+| Events Manager total | ~2× real (Purchase + custom) | **≈ 1× real** (single event) |
+
+**A Custom Conversion is NOT required** — optimize directly on the custom event (it's the same data, and a Custom Conversion gives no restriction-bypass advantage). When you switch a live ad set's optimization to the custom event, it **re-enters the learning phase** — time it away from peak spend.
+
+Wherever this doc says "optimize on Purchase," "expect a `Purchase` event," or "add browser Purchase," read it through this override. The reference repo (`ankita-prenatal`) already ships custom-only.
+
+---
+
 ## Section 1 — Day 0: verify the deploy
 
 Run this within 1 hour of the engineering team confirming the deploy is live.
@@ -254,20 +274,18 @@ For browser-side pixel events (PageView, etc.) from iOS opt-out users, Meta uses
 - Aggregated at domain level (no individual user attribution)
 - Per Meta's Oct 2024 update: now fully automatic, no configuration needed
 
-### 7.4 — Why we fire both Purchase + `<custom>` from CAPI
+### 7.4 — Why we fire only the `<custom>` event from CAPI (Health & Wellness)
 
-- **`Purchase`** is a standard event. Meta has billions of cross-account Purchase events to train its ML model. Algorithm priors are mature. iOS attribution is automatic.
-- **`<custom>`** is a custom event. No global priors — Meta has to learn what it means from your per-account data only. Slower optimization.
+> **This is the current state per Section 0.** The pre-restriction rationale (fire `Purchase` for mature global priors + `<custom>` as source-of-truth label) is below for context, but `Purchase` is restricted by name for our health-categorized datasets, so we fire **only** the custom event.
 
-We optimize the campaign on `Purchase` for fast learning. We keep `<custom>` as the internal source-of-truth label and for cross-channel reporting clarity. Both fire with the same `event_id` and same payload, single HTTP call.
+- **`Purchase`** *would* give mature cross-account ML priors and automatic iOS attribution — **but it's restricted by name for health/wellness datasets, so those benefits evaporate.** Firing it is pure downside (no optimization value, leaks a health purchase signal, inflates reporting). We do not fire it.
+- **`<custom>`** (e.g. `sales`) is a confirmed custom event with a PHI-free payload. It is **not** in the restricted standard-event bucket, so it keeps flowing and optimizing. We optimize the campaign directly on it.
 
-### 7.5 — When to switch optimization to `<custom>` (very rare)
+### 7.5 — Optimization target
 
-Stay on `Purchase` optimization unless one of these happens:
-- A second offer from the same pixel also fires `Purchase` (e.g., free webinar in addition to paid product) — then switch THIS campaign to `<custom>` to isolate paid conversions from the free signups
-- Meta's Purchase event is being inferred from non-conversion URLs (false positives that resist the toggle-off fix) — switch to `<custom>` because it's strictly server-verified
+**Optimize directly on the `<custom>` event** (no Custom Conversion needed — see Section 0). When you switch a live ad set's optimization to it, the ad set re-enters the learning phase, so time the change away from peak spend and give it 7 days before judging.
 
-In both cases, talk to the developer first.
+(Pre-restriction note, non-health pixels only: you'd default to `Purchase` and switch to `<custom>` only when a second offer shares the pixel or Purchase is being URL-inferred. Not applicable to our health funnels.)
 
 ---
 

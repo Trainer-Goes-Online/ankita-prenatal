@@ -7,9 +7,29 @@ The pattern shipped here delivers:
 - **Browser PageView EMQ: 6.0 for cold, 8.0+ for return / post-form-fill visitors**
 - **Zero diagnostic warnings** from Meta (event_source_url, MAM, domain allow list, dedup)
 - **Restricted-category compliant** (health/prenatal/financial/political)
-- **Single deterministic conversion signal** for campaign optimization (`Purchase` standard + custom event)
+- **Single deterministic conversion signal** for campaign optimization (`Purchase` standard + custom event — but see **Section 0**: health/wellness datasets fire the **custom event ONLY**)
 
 Reference repo: `Trainer-Goes-Online/ankita-prenatal`. The code patterns in this guide are extracted verbatim from that repo's `lib/analytics.ts`, `app/api/razorpay/verify-payment/route.ts`, `app/layout.tsx`, `components/CheckoutForm.tsx`, and `app/thank-you/page.tsx`.
+
+---
+
+## Section 0 — ⚠️ Health & Wellness restriction override (READ FIRST)
+
+**If the pixel/dataset is categorized "Health and wellness condition" in Events Manager (all prenatal/postpartum/fertility/health funnels in this org are), the standard `Purchase` event is restricted by name and the dual-event pattern below is INVERTED:**
+
+| Topic | Pre-restriction baseline (rest of this guide) | **Health & Wellness override (current default for our funnels)** |
+|---|---|---|
+| CAPI events fired | `Purchase` (standard) **+** `<custom>` | **`<custom>` ONLY** (e.g. `sales`) — drop `Purchase` entirely |
+| Browser-side Purchase | Escalation only (Section 7) | **Never** — also drops the health-y `content_name` it carried |
+| Campaign optimization target | `Purchase` | **The custom event directly** (no Custom Conversion needed) |
+| `event_source_url` | Full page URL | **Host-only origin** (core setup strips the path anyway; avoids leaking health-y path/UTMs) |
+| Reporting (Results column) | ~2× real if browser Purchase on | **≈ 1× real** |
+
+**Why:** Meta's data-source-category restriction blocks mid/lower-funnel *standard* events (Purchase / AddToCart / InitiateCheckout / Subscribe / Lead) **by name** for health-categorized datasets — first "core setup" (strips URL path + custom params), then full standard-event blocking on a ~17-day clock. **Confirmed custom events with PHI-free payloads are NOT in that bucket.** A Custom Conversion gives no bypass advantage over optimizing on the raw custom event (same "custom" data) — optimize directly on the custom event. Self-categorization appeals for a genuine health funnel get rejected.
+
+**Keep the custom event clean** so Meta doesn't filter it as sensitive: neutral event name (`sales`), neutral params (`value`/`currency`/`payment_id` only — no product/`content_name` strings like "Prenatal Challenge"), host-only `event_source_url`. The last residual health signal is the **subdomain** (e.g. `prenatal.`) — only fixable by moving to a neutral host (clean-domain escalation).
+
+Everything below is the pre-restriction baseline. Apply the override table whenever the dataset is health/wellness-categorized.
 
 ---
 
@@ -88,6 +108,8 @@ Payload contains **two events** in the `data` array — both share `event_id`, `
 |---|---|---|
 | 1 | `Purchase` (standard) | Campaign optimization target. Mature global ML priors. iOS attribution (AEM is automatic since Oct 2024). |
 | 2 | `<custom>` (e.g. `sales`/`leads`/`signup`) | Internal source-of-truth label. Excludes inferred Purchases or other sources. |
+
+> **Health & Wellness override (Section 0):** for health-categorized datasets, fire **only** the custom event (event 2). The standard `Purchase` (event 1) is restricted by name and is removed — the `data` array carries a single event. The reference repo (`ankita-prenatal`) is in this state.
 
 Both events ship with this `user_data` (11 matching signals = EMQ 9.5+):
 
@@ -685,13 +707,13 @@ After deploying this, the campaign Results column will normalise to the real con
 | Hashing `fbc`/`fbp`/IP/UA | These are sent RAW. Hashing breaks them as matching signals. |
 | Pre-hashing `em`/`ph`/`fn`/`ln`/`ct`/`country` in code AND ALSO calling Meta's `fbq` with raw values | Double-hashing. Meta detects 64-char hex as already-hashed; either pre-hash OR send raw, not both for the same field. |
 | Sending `value` in paise/cents | Meta expects major units. 297 not 29700. |
-| Sending the custom event WITHOUT standard `Purchase` | Custom events have no global ML priors. Standard `Purchase` benefits from billions of cross-account training events. |
+| Sending the custom event WITHOUT standard `Purchase` | Custom events have no global ML priors; standard `Purchase` benefits from billions of cross-account training events. **EXCEPTION — health/wellness datasets (Section 0):** custom-only is *required* because `Purchase` is restricted by name; the lost priors evaporate under the restriction anyway. |
 | Skipping `event_source_url` | Required for `action_source: 'website'` since Feb 2021. Restricted categories (health, financial) have a 60-day enforcement deadline before events are dropped. |
 | Configuring AEM event priorities | Meta deprecated the 8-event AEM cap and manual prioritization UI in Oct 2024. AEM is now automatic. If "Web Events Configuration" doesn't exist in Events Manager, that's the new normal. |
 | Adding browser `Purchase` by default | See Section 7 — only add on escalation. Default firing creates dedup complexity and inflated dashboard counts. |
 | `external_id` that changes per transaction | external_id MUST be user-stable. Use `sha256(normalised_email)` not `sha256(email\|payment_id)`. |
 | Different `external_id` value on browser vs CAPI | Meta requires consistency across channels for the same user. |
-| Optimizing campaign on custom event instead of `Purchase` | Custom events have no global ML priors. Default to Purchase. Switch only in rare cases (multiple funnels sharing one pixel — see buyer playbook). |
+| Optimizing campaign on custom event instead of `Purchase` | Default to Purchase for non-restricted categories. **EXCEPTION — health/wellness datasets (Section 0):** optimize directly on the custom event; `Purchase` is restricted. Also switch for multiple funnels sharing one pixel (see buyer playbook). |
 | Forgetting the free/test order guard | QA transactions get reported as real conversions — algorithm learns the wrong audience. |
 | Allow-listing staging/preview domains in Meta | Vercel preview URL events pollute production pixel. Allow-list production domain only. |
 

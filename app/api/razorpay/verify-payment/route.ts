@@ -64,12 +64,14 @@ async function sendMetaCapiEvent(params: {
   const hashedCt = ct ? sha256(ct) : undefined;
   const hashedCountry = country ? sha256(country) : undefined;
 
-  // Shared fields across BOTH events. Standard 'Purchase' gives us AEM auto-
-  // priority for iOS attribution and Meta's mature global algorithm. Custom
-  // event (e.g. 'sales') is our internal source-of-truth label that excludes
-  // any URL-inferred or third-party 'Purchase' events. Same event_id on both
-  // means they natural-dedup against pixel events but not against each other
-  // (different event_name). Campaign Results column reads one event only.
+  // RESTRICTED-CATEGORY POSTURE (Health & Wellness data-source restriction):
+  // We fire ONLY the custom event (CHECKOUT_CONFIG.capi.eventName, e.g. 'sales').
+  // The standard 'Purchase' event is restricted by name for health-categorized
+  // datasets, so it carries no optimisation value and is the exact
+  // "purchase-on-a-health-domain" signal Meta clamps. We optimise campaigns
+  // directly on the custom event instead. Keep the payload PHI-free (neutral
+  // event name + value/currency/payment_id only) so Meta won't filter it as
+  // sensitive. See docs/META_TRACKING_AGENT_GUIDE.md.
   const baseEvent = {
     event_time: Math.floor(Date.now() / 1000),
     event_id: params.paymentId,
@@ -98,10 +100,7 @@ async function sendMetaCapiEvent(params: {
     },
   };
 
-  const events = [
-    { ...baseEvent, event_name: 'Purchase' },
-    { ...baseEvent, event_name: CHECKOUT_CONFIG.capi.eventName },
-  ];
+  const events = [{ ...baseEvent, event_name: CHECKOUT_CONFIG.capi.eventName }];
 
   const res = await fetch(
     `https://graph.facebook.com/v25.0/${params.pixelId}/events?access_token=${params.accessToken}`,
@@ -345,10 +344,19 @@ export async function POST(req: NextRequest) {
         undefined;
       const clientUserAgent = req.headers.get('user-agent') ?? undefined;
       const fullPhone = `${customer.dialCode}${customer.phone}`;
-      // Fall back to the production checkout URL if the client didn't send one
-      // (older clients, or any caller that bypasses CheckoutForm). Meta requires
-      // event_source_url for action_source=website, so we must always send it.
-      const resolvedEventSourceUrl = eventSourceUrl || 'https://prenatal.bodyworx.in/checkout';
+      // Send host-only (origin). Meta requires event_source_url for
+      // action_source=website, but under the H&W "core setup" restriction Meta
+      // strips everything after the domain anyway - sending the origin avoids
+      // leaking UTMs or health-y path segments before that stripping. Falls back
+      // to the production host for older clients / callers that bypass CheckoutForm.
+      let resolvedEventSourceUrl = 'https://prenatal.bodyworx.in';
+      if (eventSourceUrl) {
+        try {
+          resolvedEventSourceUrl = new URL(eventSourceUrl).origin;
+        } catch {
+          // malformed URL - keep the production host fallback
+        }
+      }
       try {
         const capiResult = await sendMetaCapiEvent({
           pixelId: metaPixelId,
