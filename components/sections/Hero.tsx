@@ -120,7 +120,7 @@ export default function Hero() {
           <p className="rounded-pill border border-brand-soft bg-brand-soft px-5 py-2.5 text-center text-[10.5px] font-bold uppercase leading-snug tracking-[0.12em] text-brand-deep shadow-soft sm:text-[11px] sm:tracking-[0.16em] md:px-7 md:py-3">
             <LiveDot />
             For pregnant moms struggling with{' '}
-            <span className="text-brand-deep/75">{STRUGGLES}</span>
+            <span >{STRUGGLES}</span>
           </p>
         </motion.div>
 
@@ -145,8 +145,16 @@ export default function Hero() {
               className="absolute inset-x-[-10px] inset-y-[-14%] -z-0 rounded-[6px] bg-brand-deep sm:inset-x-[-14px] sm:inset-y-[-16%] sm:rounded-[8px]"
             />
           </span>{' '}
-          prepare your body for labor, and feel stronger in just{' '}
-          <span className="italic text-brand-deep">3 days.</span>
+          prepare your body for labor, and feel stronger in just
+          <span className="relative inline-block leading-none">
+          <span className="relative z-10 text-white">3 days.</span>
+          <span
+              aria-hidden="true"
+              className="absolute inset-x-[-10px] inset-y-[-14%] -z-0 rounded-[6px] bg-brand-deep sm:inset-x-[-14px] sm:inset-y-[-16%] sm:rounded-[8px]"
+            /> 
+            </span>
+             {' '}Starting from 
+          <span className="italic text-brand-deep"> {process.env.NEXT_PUBLIC_CHALLENGE_START_DATE}</span>
         </motion.h1>
 
         {/* Subtitle */}
