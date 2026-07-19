@@ -33,7 +33,7 @@ const editorial = Fraunces({
 // ── Tracking IDs ─────────────────────────────────────────────────────────────
 // Per BACKEND_SOP.md these are literal strings (not env vars). The Meta Pixel
 // access token + a duplicate of the pixel ID live in env (.env.local) for the
-// server-side CAPI in /api/razorpay/verify-payment. The pixel ID is duplicated
+// server-side CAPI in /api/razorpay/webhook. The pixel ID is duplicated
 // here as a literal because Next.js inlines it into the client bundle anyway.
 const GA4_MEASUREMENT_ID = 'G-EDHH6E5SNS';        // prenatal.bodyworx.in property
 const CLARITY_PROJECT_ID = 'ws2a6hcuqu';
@@ -161,7 +161,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             PageView event inherits those signals (EMQ ~8 vs ~6 anonymous).
             For first-time anonymous visitors with no cookie, PageView fires
             with just the auto fbp/fbc/IP/UA signals (EMQ ~6). Server-side
-            'sales' custom event lives in /api/razorpay/verify-payment. ── */}
+            'sales' custom event lives in /api/razorpay/webhook. ── */}
         {META_PIXEL_ID && (
           <>
             <Script id="meta-pixel-init" strategy="afterInteractive">{`

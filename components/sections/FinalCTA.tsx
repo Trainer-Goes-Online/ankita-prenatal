@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import { Sparkle, ShieldCheck } from '@phosphor-icons/react/dist/ssr';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 
@@ -64,7 +64,7 @@ export default function FinalCTA() {
           </ul>
 
           <div className="mt-10 flex flex-col items-center gap-3">
-            <Link
+            <CheckoutLink
               href="/checkout"
               className="inline-flex min-h-[56px] items-center justify-center gap-2 rounded-pill bg-white px-8 py-4 font-heading text-base font-bold text-brand-deep shadow-glow transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_50px_-10px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 sm:text-[17px]"
               aria-label={`Get instant access to the ${CHECKOUT_CONFIG.challenge.days}-Day Prenatal Challenge for ₹${CHECKOUT_CONFIG.amountRupeesNumeric}`}
@@ -73,7 +73,7 @@ export default function FinalCTA() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-            </Link>
+            </CheckoutLink>
             <p className="text-center text-xs text-white/85 sm:text-sm">
               <ShieldCheck
                 weight="fill"

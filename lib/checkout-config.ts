@@ -73,9 +73,18 @@ export const CHECKOUT_CONFIG = {
 
   capi: {
     // Custom event name (not a Meta standard event). Reported by the server-side
-    // CAPI call in /api/razorpay/verify-payment for every paid order. Free QA
+    // CAPI call in /api/razorpay/webhook for every captured paid order. Free QA
     // coupon orders are skipped server-side so the pixel isn't polluted.
     eventName: 'sales',
+    // Upper-funnel intent events, also custom + server-side (see
+    // lib/meta-events.ts). Deliberately OPAQUE names: under the Health &
+    // Wellness data-source restriction Meta's classifier keyword-matches the
+    // snake_case forms of standard events ('add_to_cart', 'initiate_checkout')
+    // against the standard vocabulary and can re-apply the restriction to them.
+    // 'atc_event'/'ic_event' have nothing to bind to. Do NOT rename these to
+    // the readable forms - see docs/META_ATC_IC_SOP.md §7b.
+    atcEventName: 'atc_event',
+    icEventName: 'ic_event',
     value: PRICE_RUPEES,
     currency: 'INR',
   },

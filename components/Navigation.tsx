@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import { useEffect, useState } from 'react';
 
 const NAV_LINKS = [
@@ -64,13 +65,13 @@ export default function Navigation() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
+          <CheckoutLink
             href="/checkout"
             className="hidden md:inline-flex bw-cta px-5 py-2.5 text-sm min-h-0"
           >
             Get Access · ₹1
             <ArrowRight />
-          </Link>
+          </CheckoutLink>
 
           <button
             type="button"
@@ -117,14 +118,14 @@ export default function Navigation() {
                 {l.label}
               </a>
             ))}
-            <Link
+            <CheckoutLink
               href="/checkout"
               onClick={() => setOpen(false)}
               className="bw-cta mt-2"
             >
               Get Instant Access · ₹1
               <ArrowRight />
-            </Link>
+            </CheckoutLink>
           </div>
         </div>
       )}

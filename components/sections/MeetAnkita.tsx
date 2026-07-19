@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import Image from 'next/image';
 import {
   Stethoscope,
@@ -187,14 +187,14 @@ export default function MeetAnkita() {
             </ul>
 
             <div className="mt-8">
-              <Link
+              <CheckoutLink
                 href="/checkout"
                 className="bw-cta w-full text-base sm:w-auto sm:text-[17px]"
                 aria-label={`Get instant access to Dr. Ankita's 3-Day Prenatal Challenge for ₹${CHECKOUT_CONFIG.amountRupeesNumeric}`}
               >
                 Get Instant Access · ₹{CHECKOUT_CONFIG.amountRupeesNumeric}
                 <ArrowRight />
-              </Link>
+              </CheckoutLink>
             </div>
           </div>
         </div>

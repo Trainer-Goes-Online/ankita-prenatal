@@ -1,7 +1,8 @@
 /**
  * Client-side analytics helpers.
  * GA4 / Meta Pixel client-side init lives in app/layout.tsx (script tags).
- * Server-side Meta CAPI lives in app/api/razorpay/verify-payment/route.ts.
+ * Server-side Meta CAPI lives in app/api/razorpay/webhook/route.ts ('sales')
+ * and app/api/meta/* ('atc_event' / 'ic_event').
  *
  * Functions here are no-ops until the underlying tracking IDs are wired in layout.tsx.
  */
@@ -16,22 +17,39 @@ declare global {
 
 type EventParams = Record<string, string | number | boolean | undefined>;
 
-function pushDataLayer(event: string, params: EventParams = {}) {
+/**
+ * Send a GA4 event via gtag().
+ *
+ * This used to be a `dataLayer.push({event, ...})` helper, which reached
+ * NOTHING: that's the GTM convention, and this site loads gtag.js directly
+ * (app/layout.tsx) with no GTM container. gtag.js pushes an `arguments` object
+ * and ignores plain objects, so every event fired through the old helper was
+ * silently discarded. Do not reintroduce dataLayer.push here.
+ *
+ * For the once-per-browser funnel events (add_to_cart / initiate_checkout /
+ * join_whatsapp) use lib/ga4.ts instead - those are deduped reach counts.
+ * This helper is for repeatable, per-occurrence events.
+ */
+function sendGa4Event(event: string, params: EventParams = {}) {
   if (typeof window === 'undefined') return;
-  window.dataLayer = window.dataLayer ?? [];
-  window.dataLayer.push({ event, ...params });
+  if (typeof window.gtag !== 'function') return;
+  try {
+    window.gtag('event', event, params);
+  } catch {
+    // Analytics must never throw into a handler.
+  }
 }
 
 export function trackBeginCheckout(value: number, currency = 'INR') {
-  // GA4 only. Meta only receives the custom server-side 'sales' event after a
-  // verified Razorpay payment - that's the authoritative conversion signal we
+  // GA4 only. Meta receives the custom server-side 'sales' event after Razorpay
+  // captures the payment - that's the authoritative conversion signal we
   // optimise ads on (CPR). Client-side standard events are intentionally not
   // fired here so they don't compete with 'sales' in Meta's attribution.
-  pushDataLayer('begin_checkout', { value, currency });
+  sendGa4Event('begin_checkout', { value, currency });
 }
 
 export function trackCtaClick(ctaLabel: string, location: string) {
-  pushDataLayer('cta_click', { cta_label: ctaLabel, location });
+  sendGa4Event('cta_click', { cta_label: ctaLabel, location });
 }
 
 export function trackPurchaseComplete(params: {
@@ -39,8 +57,7 @@ export function trackPurchaseComplete(params: {
   value: number;
   currency?: string;
 }) {
-  // GA4 dataLayer push.
-  pushDataLayer('purchase_complete', {
+  sendGa4Event('purchase_complete', {
     transaction_id: params.paymentId,
     value: params.value,
     currency: params.currency ?? 'INR',
@@ -53,7 +70,7 @@ export function trackPurchaseComplete(params: {
 // 'Purchase' event is restricted by name for this (health-categorized) pixel,
 // so firing it adds no optimisation value and leaks a health-y content_name.
 // The conversion fires server-side ONLY, as the custom 'sales' event via CAPI
-// (see app/api/razorpay/verify-payment/route.ts). Campaigns optimise directly
+// (see app/api/razorpay/webhook/route.ts). Campaigns optimise directly
 // on that custom event. If a future media-buyer dedup escalation ever requires
 // a browser pair, it must be a CUSTOM event (matching CHECKOUT_CONFIG.capi
 // .eventName) with a neutral payload - never the standard 'Purchase'. See

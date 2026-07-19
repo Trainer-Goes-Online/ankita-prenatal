@@ -13,6 +13,8 @@ import {
 } from '@phosphor-icons/react/dist/ssr';
 import PaymentLogos from '@/components/PaymentLogos';
 import { setMetaAdvancedMatching } from '@/lib/analytics';
+import { fireIcOnce } from '@/lib/meta-client';
+import { trackGa4EventOnce } from '@/lib/ga4';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 import type { CouponResult, CouponSuccess } from '@/lib/coupons';
 import {
@@ -593,6 +595,13 @@ export default function CheckoutForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    // GA4 'initiate_checkout' fires HERE - at the top, BEFORE validation. The
+    // GA4 signal is "did they attempt to pay", so a half-filled form that
+    // bounces off validation still counts; the errors are the user's own
+    // feedback loop. This deliberately differs from the Meta ic_event below,
+    // which only fires on a clean form. Two events, two contracts.
+    trackGa4EventOnce('initiate_checkout');
+
     setTouched({ firstName: true, lastName: true, email: true, city: true, phone: true });
     const allErrors = validateFields(fields, countryCode);
     setErrors(allErrors);
@@ -612,11 +621,41 @@ export default function CheckoutForm() {
 
     setLoading(true);
 
+    const selectedCountry = COUNTRIES.find(c => c.code === countryCode) ?? COUNTRIES[0];
+    const customerPayload = {
+      firstName: fields.firstName.trim(),
+      lastName: fields.lastName.trim(),
+      email: fields.email.trim(),
+      city: fields.city.trim(),
+      phone: fields.phone.trim(),
+      countryCode,
+      dialCode: selectedCountry.dial,
+    };
+
     try {
+      // Meta ic_event - validated form, immediately before create-order.
+      // Skipped for 100%-off QA coupons: those are internal test registrations
+      // and must never reach Meta. Awaited but never blocking - fireIcOnce
+      // swallows its own errors so a Meta outage can't stop the payment.
+      const isFreeCoupon = appliedCoupon?.finalAmountRupeesNumeric === 0;
+      if (!isFreeCoupon) {
+        await fireIcOnce(customerPayload);
+      }
+
+      const utm = readUtmCookie();
+      // _fbc (the cookie Meta derives from fbclid) is read server-side and is
+      // the reliable carrier; this is a best-effort extra for the Pabbly row.
+      const fbclid = new URLSearchParams(window.location.search).get('fbclid') ?? '';
+
       const orderRes = await fetch('/api/razorpay/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ couponCode: appliedCoupon?.code ?? '' }),
+        body: JSON.stringify({
+          couponCode: appliedCoupon?.code ?? '',
+          customer: customerPayload,
+          utm,
+          fbclid,
+        }),
       });
 
       if (!orderRes.ok) {
@@ -640,8 +679,6 @@ export default function CheckoutForm() {
       if (appliedCoupon && (!coupon || !coupon.ok)) {
         throw new Error('Coupon is no longer valid. Please remove it and try again.');
       }
-
-      const selectedCountry = COUNTRIES.find(c => c.code === countryCode) ?? COUNTRIES[0];
 
       // ── Free-order branch - skip Razorpay modal entirely ─────────────────
       if (freeOrder && freeOrderToken && coupon?.ok) {
@@ -754,33 +791,11 @@ export default function CheckoutForm() {
     try {
       const utm = readUtmCookie();
 
-      const verifyRes = await fetch('/api/razorpay/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: response.razorpay_order_id,
-          paymentId: response.razorpay_payment_id,
-          signature: response.razorpay_signature,
-          customer: {
-            firstName: fields.firstName.trim(),
-            lastName: fields.lastName.trim(),
-            email: fields.email.trim(),
-            city: fields.city.trim(),
-            phone: fields.phone.trim(),
-            countryCode,
-            dialCode,
-          },
-          utm,
-          eventSourceUrl: typeof window !== 'undefined' ? window.location.href : undefined,
-        }),
-      });
-
-      const result = await verifyRes.json();
-
-      if (!result.success) {
-        throw new Error(result.error ?? 'Payment verification failed.');
-      }
-
+      // NO verify-payment call. Pabbly + Meta CAPI now fire from
+      // /api/razorpay/webhook, server-to-server, the moment Razorpay captures
+      // the payment - so a buyer who completes a UPI payment inside GPay and
+      // never returns to this tab is still tracked. This handler's only job is
+      // to refresh advanced matching and move the user to /thank-you.
       const tyParams = new URLSearchParams({ funnel: CHECKOUT_CONFIG.funnelSlug });
       if (utm.source)   tyParams.set('utm_source',   utm.source);
       if (utm.medium)   tyParams.set('utm_medium',   utm.medium);
@@ -788,8 +803,12 @@ export default function CheckoutForm() {
       if (utm.content)  tyParams.set('utm_content',  utm.content);
       if (utm.term)     tyParams.set('utm_term',     utm.term);
       if (utm.id)       tyParams.set('utm_id',       utm.id);
-      if (result.amount)   tyParams.set('amt', String(result.amount));
-      if (result.currency) tyParams.set('cur', String(result.currency));
+      // Display-only values for the confirmation copy. The authoritative
+      // amount is whatever Razorpay captured, which the webhook reads from the
+      // payment entity - this is just what we render on /thank-you.
+      tyParams.set('amt', String(finalRupees));
+      tyParams.set('cur', CHECKOUT_CONFIG.currency);
+      console.log('[checkout] payment captured:', response.razorpay_payment_id);
       // Set Meta Pixel Advanced Matching so the PageView on /thank-you (and
       // any future browser events) inherits hashed em/ph/fn/ln/ct/country and
       // reaches 9.x/10 Event Match Quality, and feeds match-based audiences.

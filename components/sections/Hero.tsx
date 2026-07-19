@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import Image from 'next/image';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import PaymentLogos from '@/components/PaymentLogos';
@@ -315,7 +315,7 @@ export default function Hero() {
               </div>
 
               {/* CTA */}
-              <Link
+              <CheckoutLink
                 href="/checkout"
                 aria-label={`Get instant access to the 3-Day Prenatal Challenge for ₹${CHECKOUT_CONFIG.amountRupeesNumeric}`}
                 className="group relative mt-6 inline-flex w-full items-center justify-center gap-2 rounded-pill bg-brand-deep px-6 py-4 font-heading text-base font-semibold text-white shadow-[0_18px_50px_-14px_rgba(146,68,83,0.55)] transition-all duration-300 hover:translate-y-[-1px] hover:bg-ink hover:shadow-[0_22px_55px_-12px_rgba(26,14,18,0.55)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-ring sm:text-[17px]"
@@ -328,7 +328,7 @@ export default function Hero() {
                   className="transition-transform duration-300 group-hover:translate-x-1"
                   aria-hidden="true"
                 />
-              </Link>
+              </CheckoutLink>
 
               {/* Trust line - each fact is its own whitespace-nowrap chunk so
                   a single fact never breaks across two lines on narrow screens. */}

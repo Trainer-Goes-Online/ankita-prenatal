@@ -22,6 +22,7 @@ import {
 } from '@phosphor-icons/react/dist/ssr';
 import { reapplyMamFromCookie, trackPurchaseComplete } from '@/lib/analytics';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
+import JoinWhatsAppButton from '@/components/JoinWhatsAppButton';
 
 // The WhatsApp community invite rotates every ~2 weeks, so it lives in an env
 // var instead of being hardcoded. NEXT_PUBLIC_ prefix is required because this
@@ -210,10 +211,8 @@ function ThankYouContent() {
                   </ul>
                 </div>
 
-                <a
+                <JoinWhatsAppButton
                   href={WHATSAPP_INVITE}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="group inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-pill bg-white px-6 py-4 font-heading text-[15px] font-bold shadow-lg transition-transform duration-200 hover:-translate-y-0.5 sm:text-[16px] md:self-center md:px-7"
                   style={{ color: '#128C7E' }}
                   aria-label="Join the BodyWorx WhatsApp community"
@@ -234,7 +233,7 @@ function ThankYouContent() {
                   >
                     <path d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
-                </a>
+                </JoinWhatsAppButton>
               </div>
             </div>
           </div>

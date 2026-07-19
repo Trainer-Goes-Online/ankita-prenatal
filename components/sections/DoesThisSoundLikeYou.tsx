@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import Image from 'next/image';
 import { ShieldCheck, Sparkle } from '@phosphor-icons/react/dist/ssr';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
@@ -92,14 +92,14 @@ export default function DoesThisSoundLikeYou() {
         </ul>
 
         <div className="mt-12 flex flex-col items-center gap-3 sm:mt-14">
-          <Link
+          <CheckoutLink
             href="/checkout"
             className="bw-cta w-full text-base sm:w-auto sm:text-[17px]"
             aria-label={`Get instant access to the 3-Day Prenatal Challenge for ₹${CHECKOUT_CONFIG.amountRupeesNumeric}`}
           >
             Get Instant Access · ₹{CHECKOUT_CONFIG.amountRupeesNumeric}
             <ArrowRight />
-          </Link>
+          </CheckoutLink>
           <p className="text-center text-xs text-ink-muted sm:text-sm">
             <ShieldCheck
               size={14}

@@ -1,197 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import Razorpay from 'razorpay';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
 import { validateCoupon } from '@/lib/coupons';
-
-// ── OPTIONAL BLOCK: META CONVERSIONS API ─────────────────────────────────────
-// Per BACKEND_SOP.md: this block executes only when META_PIXEL_ID and
-// META_CAPI_ACCESS_TOKEN are both present. If CAPI is permanently not required
-// for this client, delete this function and the block in the POST handler.
-
-function sha256(value: string): string {
-  return crypto.createHash('sha256').update(value).digest('hex');
-}
-
-async function sendMetaCapiEvent(params: {
-  pixelId: string;
-  accessToken: string;
-  paymentId: string;
-  email: string;
-  phone: string;
-  firstName: string;
-  lastName: string;
-  city: string;
-  countryCode: string;
-  eventSourceUrl: string;
-  fbc: string | undefined;
-  fbp: string | undefined;
-  clientIp: string | undefined;
-  clientUserAgent: string | undefined;
-  valueRupees: number;
-  currency: string;
-}) {
-  // Email: lowercase + trim, then SHA-256.
-  const normalisedEmail = params.email.trim().toLowerCase();
-  const hashedEmail = sha256(normalisedEmail);
-
-  // Phone: digits only (E.164 without +) before hashing.
-  const rawPhone = params.phone.replace(/\D/g, '');
-  const hashedPhone = rawPhone ? sha256(rawPhone) : undefined;
-
-  // external_id: stable per-USER identifier (not per-transaction) per Meta's
-  // spec (developers.facebook.com → External ID). Must be CONSISTENT across
-  // browser Pixel and CAPI for the same user - browser MAM init in
-  // lib/analytics.ts buildHashedMatching computes the same value. Meta caches
-  // the external_id → Facebook user mapping after the first match, so future
-  // events from the same user (including anonymous return-visit PageViews)
-  // can be re-matched without other PII. Using sha256(normalised email)
-  // means the same user always produces the same external_id regardless of
-  // session, channel, or how many transactions they make.
-  const externalId = sha256(normalisedEmail);
-
-  // Per Meta spec: fn/ln are lowercase + trim. ct is lowercase a-z only (no
-  // whitespace/punctuation). country is lowercase 2-letter ISO. Adding these
-  // raises Event Match Quality (EMQ) which directly improves attribution and
-  // therefore CPR — Meta uses them to match the conversion back to ad clicks.
-  const fn = params.firstName.trim().toLowerCase();
-  const ln = params.lastName.trim().toLowerCase();
-  const ct = params.city.trim().toLowerCase().replace(/[^a-z]/g, '');
-  const country = params.countryCode.trim().toLowerCase();
-
-  const hashedFn = fn ? sha256(fn) : undefined;
-  const hashedLn = ln ? sha256(ln) : undefined;
-  const hashedCt = ct ? sha256(ct) : undefined;
-  const hashedCountry = country ? sha256(country) : undefined;
-
-  // RESTRICTED-CATEGORY POSTURE (Health & Wellness data-source restriction):
-  // We fire ONLY the custom event (CHECKOUT_CONFIG.capi.eventName, e.g. 'sales').
-  // The standard 'Purchase' event is restricted by name for health-categorized
-  // datasets, so it carries no optimisation value and is the exact
-  // "purchase-on-a-health-domain" signal Meta clamps. We optimise campaigns
-  // directly on the custom event instead. Keep the payload PHI-free (neutral
-  // event name + value/currency/payment_id only) so Meta won't filter it as
-  // sensitive. See docs/META_TRACKING_AGENT_GUIDE.md.
-  const baseEvent = {
-    event_time: Math.floor(Date.now() / 1000),
-    event_id: params.paymentId,
-    action_source: 'website',
-    // Required for action_source=website since Feb 2021; strictly enforced in
-    // restricted ad categories (health/prenatal/financial). Without it Meta
-    // discards the event from reporting & optimisation.
-    event_source_url: params.eventSourceUrl,
-    user_data: {
-      em: [hashedEmail],
-      ...(hashedPhone && { ph: [hashedPhone] }),
-      ...(hashedFn && { fn: [hashedFn] }),
-      ...(hashedLn && { ln: [hashedLn] }),
-      ...(hashedCt && { ct: [hashedCt] }),
-      ...(hashedCountry && { country: [hashedCountry] }),
-      external_id: [externalId],
-      ...(params.fbc && { fbc: params.fbc }),
-      ...(params.fbp && { fbp: params.fbp }),
-      ...(params.clientUserAgent && { client_user_agent: params.clientUserAgent }),
-      ...(params.clientIp && { client_ip_address: params.clientIp }),
-    },
-    custom_data: {
-      currency: params.currency,
-      value: params.valueRupees,
-      payment_id: params.paymentId,
-    },
-  };
-
-  const events = [{ ...baseEvent, event_name: CHECKOUT_CONFIG.capi.eventName }];
-
-  const res = await fetch(
-    `https://graph.facebook.com/v25.0/${params.pixelId}/events?access_token=${params.accessToken}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: events }),
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(JSON.stringify(err));
-  }
-
-  return res.json();
-}
-// ── END OPTIONAL BLOCK ────────────────────────────────────────────────────────
-
-interface CustomerData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  city: string;
-  phone: string;
-  countryCode: string;
-  dialCode: string;
-}
-
-interface UtmData {
-  source?: string;
-  medium?: string;
-  campaign?: string;
-  content?: string;
-  term?: string;
-  id?: string;
-}
+import type { CustomerData } from '@/lib/meta-capi';
+import type { UtmData } from '@/lib/utm';
 
 /**
- * Fetch the authoritative payment record from Razorpay. We trust this over the
- * client because the amount might have been discounted by a coupon - Pabbly +
- * CAPI must reflect what was actually paid, not the list price.
+ * POST /api/razorpay/verify-payment - FREE / QA-COUPON ORDERS ONLY.
+ *
+ * Paid orders no longer come through here. They are tracked server-to-server
+ * by /api/razorpay/webhook, which fires whether or not the buyer's browser
+ * ever returns from their UPI app. See docs/RAZORPAY_WEBHOOK_MIGRATION.md.
+ *
+ * This route survives for exactly one reason: 100%-off coupons (tgotest2025)
+ * never create a Razorpay order at all - Razorpay rejects ₹0 - so Razorpay has
+ * nothing to send a webhook about. The free flow mints a signed `free_*` order
+ * in create-order and settles it here.
+ *
+ * Meta CAPI is deliberately NOT fired for free orders: those are internal QA
+ * registrations and must never show up as conversions in Ads Manager. They do
+ * reach Pabbly, tagged free_order=true and amount=0 so they're easy to filter.
  */
-async function fetchActualPaidAmount(paymentId: string): Promise<{
-  amountPaise: number;
-  currency: string;
-}> {
-  const fallback = {
-    amountPaise: CHECKOUT_CONFIG.amountPaise,
-    currency: CHECKOUT_CONFIG.currency,
-  };
-  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    return fallback;
-  }
-  try {
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-    const payment = await razorpay.payments.fetch(paymentId);
-    const amount = typeof payment.amount === 'string' ? parseInt(payment.amount, 10) : payment.amount;
-    if (typeof amount === 'number' && Number.isFinite(amount)) {
-      return { amountPaise: amount, currency: String(payment.currency ?? CHECKOUT_CONFIG.currency) };
-    }
-  } catch (err) {
-    console.error('[verify-payment] Could not fetch payment record:', err);
-  }
-  return fallback;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
       orderId,
-      paymentId,
-      signature,
       customer,
       utm,
       couponCode,
       freeOrderToken,
-      eventSourceUrl,
     }: {
       orderId: string;
-      paymentId?: string;
-      signature?: string;
       customer: CustomerData;
       utm: UtmData;
       couponCode?: string;
       freeOrderToken?: string;
-      eventSourceUrl?: string;
     } = body;
 
     if (!orderId) {
@@ -209,77 +53,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let resolvedPaymentId: string;
-    let paidAmountPaise: number;
-    let paidCurrency: string;
-
-    // ── Free-order branch ──────────────────────────────────────────────────
-    // Triggered when create-order issued a free-order token (100%-off coupon).
-    // We re-validate the coupon AND verify the HMAC, so the client can't fake
-    // a free order by guessing an orderId pattern.
+    // Paid orders must go through the webhook. If a stale client (or a probe)
+    // posts a real payment here, reject rather than double-firing Pabbly.
     const isFreeOrder = orderId.startsWith('free_') && !!freeOrderToken;
-    if (isFreeOrder) {
-      if (!couponCode) {
-        return NextResponse.json(
-          { success: false, error: 'Free-order flow requires a coupon code.' },
-          { status: 400 }
-        );
-      }
-      const coupon = validateCoupon(couponCode);
-      if (!coupon.ok || coupon.finalAmountPaise !== 0) {
-        return NextResponse.json(
-          { success: false, error: 'Coupon no longer valid for a free order.' },
-          { status: 400 }
-        );
-      }
-      const expectedToken = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-        .update(`${orderId}|${coupon.code}|free`)
-        .digest('hex');
-      if (!freeOrderToken || expectedToken !== freeOrderToken) {
-        return NextResponse.json(
-          { success: false, error: 'Free-order token mismatch.' },
-          { status: 400 }
-        );
-      }
-      // Authoritative free-order info
-      resolvedPaymentId = `free_pay_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
-      paidAmountPaise = 0;
-      paidCurrency = CHECKOUT_CONFIG.currency;
-    } else {
-      // ── Standard paid-order branch ───────────────────────────────────────
-      if (!paymentId || !signature) {
-        return NextResponse.json(
-          { success: false, error: 'Missing required payment fields.' },
-          { status: 400 }
-        );
-      }
-
-      // HMAC-SHA256 of "orderId|paymentId" - Razorpay protocol requirement
-      const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-        .update(`${orderId}|${paymentId}`)
-        .digest('hex');
-
-      if (expectedSignature !== signature) {
-        return NextResponse.json(
-          { success: false, error: 'Payment verification failed.' },
-          { status: 400 }
-        );
-      }
-
-      // Pull the authoritative amount from Razorpay so coupon-discounted orders
-      // report the actual paid amount in Pabbly + CAPI.
-      const fetched = await fetchActualPaidAmount(paymentId);
-      resolvedPaymentId = paymentId;
-      paidAmountPaise = fetched.amountPaise;
-      paidCurrency = fetched.currency;
+    if (!isFreeOrder) {
+      console.warn(`[verify-payment] rejected non-free order ${orderId} - paid orders are webhook-tracked`);
+      return NextResponse.json(
+        { success: false, error: 'This route only settles free orders.' },
+        { status: 400 }
+      );
     }
 
-    const paidAmountRupeesString = (paidAmountPaise / 100).toString();
-    const paidAmountRupeesNumeric = paidAmountPaise / 100;
+    if (!couponCode) {
+      return NextResponse.json(
+        { success: false, error: 'Free-order flow requires a coupon code.' },
+        { status: 400 }
+      );
+    }
 
-    // Payment verified - build Pabbly payload
+    // Re-validate the coupon AND verify the HMAC, so the client can't fake a
+    // free order by guessing an orderId pattern.
+    const coupon = validateCoupon(couponCode);
+    if (!coupon.ok || coupon.finalAmountPaise !== 0) {
+      return NextResponse.json(
+        { success: false, error: 'Coupon no longer valid for a free order.' },
+        { status: 400 }
+      );
+    }
+
+    const expectedToken = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${orderId}|${coupon.code}|free`)
+      .digest('hex');
+
+    if (expectedToken !== freeOrderToken) {
+      return NextResponse.json(
+        { success: false, error: 'Free-order token mismatch.' },
+        { status: 400 }
+      );
+    }
+
+    const resolvedPaymentId = `free_pay_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
+
     const now = new Date();
     const pabblyPayload = {
       first_name:        customer.firstName,
@@ -291,10 +106,10 @@ export async function POST(req: NextRequest) {
       country_code:      customer.countryCode,
       payment_id:        resolvedPaymentId,
       order_id:          orderId,
-      amount:            paidAmountRupeesString,
-      currency:          paidCurrency,
-      coupon_code:       couponCode ?? '',
-      free_order:        isFreeOrder,
+      amount:            '0',
+      currency:          CHECKOUT_CONFIG.currency,
+      coupon_code:       couponCode,
+      free_order:        true,
       payment_date:      now.toLocaleDateString('en-IN', { timeZone: CHECKOUT_CONFIG.paymentTimezone }),
       payment_time:      now.toLocaleTimeString('en-IN', { timeZone: CHECKOUT_CONFIG.paymentTimezone }),
       payment_timestamp: now.toISOString(),
@@ -306,7 +121,7 @@ export async function POST(req: NextRequest) {
       utm_id:            utm?.id       ?? '',
     };
 
-    console.log('[verify-payment] Verified purchase:', pabblyPayload);
+    console.log('[verify-payment] Verified FREE registration:', pabblyPayload);
 
     // Fire Pabbly webhook (non-blocking - errors never surface to the user)
     const webhookUrl = process.env.PABBLY_WEBHOOK_URL;
@@ -329,68 +144,12 @@ export async function POST(req: NextRequest) {
       console.error('[verify-payment] CRITICAL: PABBLY_WEBHOOK_URL not set - webhook skipped');
     }
 
-    // ── OPTIONAL BLOCK: META CONVERSIONS API ─────────────────────────────────
-    // Fires the custom 'sales' event (name set in CHECKOUT_CONFIG.capi.eventName).
-    // Skipped for free QA-coupon orders so test registrations don't show up as
-    // conversions in Meta Ads Manager.
-    const metaPixelId = process.env.META_PIXEL_ID;
-    const metaAccessToken = process.env.META_CAPI_ACCESS_TOKEN;
-    if (metaPixelId && metaAccessToken && !isFreeOrder) {
-      const fbc = req.cookies.get('_fbc')?.value;
-      const fbp = req.cookies.get('_fbp')?.value;
-      const clientIp =
-        req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-        req.headers.get('x-real-ip') ??
-        undefined;
-      const clientUserAgent = req.headers.get('user-agent') ?? undefined;
-      const fullPhone = `${customer.dialCode}${customer.phone}`;
-      // Send host-only (origin). Meta requires event_source_url for
-      // action_source=website, but under the H&W "core setup" restriction Meta
-      // strips everything after the domain anyway - sending the origin avoids
-      // leaking UTMs or health-y path segments before that stripping. Falls back
-      // to the production host for older clients / callers that bypass CheckoutForm.
-      let resolvedEventSourceUrl = 'https://prenatal.bodyworx.in';
-      if (eventSourceUrl) {
-        try {
-          resolvedEventSourceUrl = new URL(eventSourceUrl).origin;
-        } catch {
-          // malformed URL - keep the production host fallback
-        }
-      }
-      try {
-        const capiResult = await sendMetaCapiEvent({
-          pixelId: metaPixelId,
-          accessToken: metaAccessToken,
-          paymentId: resolvedPaymentId,
-          email: customer.email,
-          phone: fullPhone,
-          firstName: customer.firstName,
-          lastName: customer.lastName,
-          city: customer.city,
-          countryCode: customer.countryCode,
-          eventSourceUrl: resolvedEventSourceUrl,
-          fbc,
-          fbp,
-          clientIp,
-          clientUserAgent,
-          valueRupees: paidAmountRupeesNumeric,
-          currency: paidCurrency,
-        });
-        console.log('[verify-payment] Meta CAPI event sent:', capiResult);
-      } catch (err) {
-        console.error('[verify-payment] Meta CAPI error:', err);
-      }
-    } else {
-      console.error('[verify-payment] Meta CAPI skipped - META_PIXEL_ID or META_CAPI_ACCESS_TOKEN not set');
-    }
-    // ── END OPTIONAL BLOCK ────────────────────────────────────────────────────
-
     return NextResponse.json({
       success: true,
       paymentId: resolvedPaymentId,
-      amount: paidAmountRupeesNumeric,
-      currency: paidCurrency,
-      freeOrder: isFreeOrder,
+      amount: 0,
+      currency: CHECKOUT_CONFIG.currency,
+      freeOrder: true,
     });
   } catch (error) {
     console.error('[verify-payment]', error);

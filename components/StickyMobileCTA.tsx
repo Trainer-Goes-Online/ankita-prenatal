@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import { useEffect, useState } from 'react';
 import { ShieldCheck } from '@phosphor-icons/react/dist/ssr';
 import { CHECKOUT_CONFIG } from '@/lib/checkout-config';
@@ -57,14 +57,14 @@ export default function StickyMobileCTA() {
             <ShieldCheck weight="fill" size={14} aria-hidden="true" className="text-brand-deep" />
             <span>100% Money-Back Guarantee · Starts {CHECKOUT_CONFIG.challenge.startDate}</span>
           </div>
-          <Link
+          <CheckoutLink
             href="/checkout"
             className="bw-cta min-h-[52px] w-full text-[15px] md:w-auto md:min-w-[320px] md:text-[15.5px]"
             aria-label="Start your 3-day prenatal challenge - opens checkout"
           >
             Get Instant Access · ₹{CHECKOUT_CONFIG.amountRupeesNumeric}
             <ArrowRight />
-          </Link>
+          </CheckoutLink>
         </div>
       </div>
     </div>

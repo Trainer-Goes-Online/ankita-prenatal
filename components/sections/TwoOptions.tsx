@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   ArrowRight,
@@ -233,7 +233,7 @@ export default function TwoOptions() {
                   ))}
                 </ul>
 
-                <Link
+                <CheckoutLink
                   href="/checkout"
                   aria-label={`Get instant access to the 3-Day Prenatal Challenge for ₹${CHECKOUT_CONFIG.amountRupeesNumeric}`}
                   className="relative mt-7 inline-flex w-full items-center justify-center gap-2 rounded-pill bg-white px-6 py-3.5 font-heading text-[14.5px] font-semibold text-brand-deep shadow-[0_14px_44px_-14px_rgba(255,255,255,0.55)] transition-all duration-300 hover:translate-y-[-1px] hover:shadow-[0_18px_50px_-12px_rgba(255,255,255,0.7)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 sm:text-[15px]"
@@ -245,7 +245,7 @@ export default function TwoOptions() {
                     className="transition-transform duration-300 group-hover:translate-x-1"
                     aria-hidden="true"
                   />
-                </Link>
+                </CheckoutLink>
 
                 <p className="relative mt-3 text-center text-[11.5px] font-medium uppercase tracking-[0.16em] text-white/85">
                   100% money-back guarantee

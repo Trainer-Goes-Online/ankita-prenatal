@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import CheckoutLink from '@/components/CheckoutLink';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
   ArrowRight,
@@ -187,7 +187,7 @@ export default function ValueStack({ variant = 'primary' }: ValueStackProps) {
                 (Introductory price · increasing soon)
               </p>
 
-              <Link
+              <CheckoutLink
                 href="/checkout"
                 aria-label={`Get instant access to the 3-Day Prenatal Challenge for ₹${FINAL_PRICE}`}
                 className="group mt-7 inline-flex w-full items-center justify-center gap-2 rounded-pill bg-brand-deep px-6 py-4 font-heading text-[15px] font-semibold text-white shadow-[0_18px_50px_-14px_rgba(146,68,83,0.55)] transition-all duration-300 hover:translate-y-[-1px] hover:bg-ink hover:shadow-[0_22px_55px_-12px_rgba(26,14,18,0.55)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-ring sm:w-auto sm:text-[16px]"
@@ -200,7 +200,7 @@ export default function ValueStack({ variant = 'primary' }: ValueStackProps) {
                   className="transition-transform duration-300 group-hover:translate-x-1"
                   aria-hidden="true"
                 />
-              </Link>
+              </CheckoutLink>
 
               <p className="mt-3 text-[10.5px] font-bold uppercase tracking-[0.16em] text-ink-soft sm:text-[11px]">
                 100% Money-Back Guarantee
